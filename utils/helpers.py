@@ -4,7 +4,7 @@ from selenium.common.exceptions import NoSuchDriverException
 import os
 
 
-def setup_driver(config):
+def setup_driver(*args):
     """Setup chrome webdriver.
 
     There seems to have been a bug in selenium-manager when installed in conda environments
@@ -19,8 +19,8 @@ def setup_driver(config):
     :return selenium.webdriver
     """
     options = ChromeOptions()
-    for value in config['CHROME'].values():
-        options.add_argument(value)
+    for arg in args:
+        options.add_argument(arg)
 
     try:
         driver = Chrome(service=Service(), options=options)
@@ -30,8 +30,7 @@ def setup_driver(config):
                                                          "bin", "selenium-manager")
             driver = Chrome(service=Service(), options=options)
         except KeyError:
-            executable_path = config['ENV']['CHROMEDRIVER_PATH']
-            driver = Chrome(service=Service(executable_path=executable_path), options=options)
-            # TODO: Handle KeyError when config['ENV']['CHROMEDRIVER_PATH'] is missing
+            print('Could not find the selenium-manager. Quitting.')
+            raise SystemExit()
 
     return driver
