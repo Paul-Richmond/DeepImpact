@@ -8,13 +8,14 @@ from selenium.common.exceptions import WebDriverException, TimeoutException, NoS
 from bs4 import BeautifulSoup
 import pandas as pd
 from utils.helpers import setup_driver
+from utils.io import load_config_yaml
 
 
 class BbcComments:
     def __init__(self, driver, cfg):
         self.driver = driver
         self.cfg = cfg
-        self.wait = self.get_wait()
+        self.wait = self.get_wait(**cfg['WebDriverWait'])
 
     def scrape(self, url):
 
@@ -27,16 +28,16 @@ class BbcComments:
         Otherwise we will see the 'Check for new replies button'
         which can be pressed infintely'''
         # alternative is 'Sign in to comment, reply and react'
-        self.click_button(self.cfg['BBC_SITE']['comments_button'])
+        self.click_button(self.cfg['bbc_site']['comments_button'])
 
         # Repeatedly click on the 'More comments' button until it disappears
         click_again = True
         while click_again:
-            click_again = self.click_button(self.cfg['BBC_SITE']['more_comments_button'])
+            click_again = self.click_button(self.cfg['bbc_site']['more_comments_button'])
 
         # Repeatedly click on the 'More replies' buttons
         more_replies_buttons = self.driver.find_elements(By.XPATH,
-                                                         self.cfg['BBC_SITE']['more_replies_button'])
+                                                         self.cfg['bbc_site']['more_replies_button'])
         for button in more_replies_buttons:
             while True:
                 try:
@@ -47,25 +48,20 @@ class BbcComments:
         # grab the full html
         bs = BeautifulSoup(self.driver.page_source, 'html.parser')
         # BeautifulSoup can't handle xpaths, so we have to class names instead
-        contents = bs.find_all('div', class_=self.cfg['BBC_SITE']['comment_contents'])
+        contents = bs.find_all('div', class_=self.cfg['bbc_site']['comment_contents'])
 
-        data = [value for value in self.cfg['DATA'].values()]
-        all_data = [[content.findChild('div', eval(datum)).text for datum in data]
+        all_data = [[content.findChild('div', selector).text for selector in self.cfg['data_selectors']]
                     for content in contents]
 
         # place the scraped data into a DataFrame
-        df = pd.DataFrame(all_data, columns=['Comment', 'Post Date', 'Likes', 'Dislikes'])
+        df = pd.DataFrame(all_data, columns=self.cfg['df_columns'])
         self.driver.quit()  # close the webdriver
 
         return df
 
-    def get_wait(self):
-        try:
-            wait_time = float(self.cfg['BBC_SITE']['wait_time'])
-        except ValueError:
-            wait_time = 2  # set a default value
-
-        return WebDriverWait(self.driver, wait_time)
+    def get_wait(self, **kwargs):
+        wait_args = kwargs.values()
+        return WebDriverWait(self.driver, *wait_args)
 
     def click_button(self, selector):
         if selector.startswith('//'):
@@ -86,12 +82,11 @@ class BbcComments:
 
 
 def get_bbc_comments(run_args):
-    config = configparser.ConfigParser()
-    config.read(run_args.config)
+    config = load_config_yaml(run_args.config)
 
-    driver = setup_driver(config)
+    driver = setup_driver(*config['ChromeOptions'])
 
-    df = BbcComments(driver, config).scrape(config['BBC_SITE']['target_url'])
+    df = BbcComments(driver, config).scrape(config['target_url'])
     df.to_csv(args.output, index=False)
 
 
