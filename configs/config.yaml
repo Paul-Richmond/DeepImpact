@@ -1,0 +1,19 @@
+ChromeOptions:
+    - --headless
+
+WebDriverWait:
+  timeout: 2.0
+
+target_url: https://www.bbc.co.uk/sport/cricket/68128995
+
+bbc_site:
+  comments_button: '//*[@id="main-content"]/div/div[3]/button'
+  more_comments_button: '//button[@class="comments-button comments__more-comments-button"]'
+  more_replies_button: '//button[@class="reply-more-replies__button"]'
+  comment_contents: 'comment__content'
+
+data_selectors:
+    - {'class': 'comment__text'}
+    - {'class': 'posted-date comment__posted-date'}
+    - {'class': 'comment-rating__button-number'}
+    - {'class': 'comment__down-ratings'}
