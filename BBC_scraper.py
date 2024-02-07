@@ -1,10 +1,9 @@
 import argparse
-import configparser
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver import ActionChains
 from selenium.common.exceptions import WebDriverException, TimeoutException, NoSuchElementException
+from selenium.webdriver.support.wait import WebDriverWait
 from bs4 import BeautifulSoup
 import pandas as pd
 from utils.helpers import setup_driver
@@ -12,10 +11,10 @@ from utils.io import load_config_yaml
 
 
 class BbcComments:
-    def __init__(self, driver, cfg):
+    def __init__(self, driver, webdriverwait, cfg):
         self.driver = driver
+        self.wait = webdriverwait
         self.cfg = cfg
-        self.wait = self.get_wait(**cfg['WebDriverWait'])
 
     def scrape(self, url):
 
@@ -59,10 +58,6 @@ class BbcComments:
 
         return df
 
-    def get_wait(self, **kwargs):
-        wait_args = kwargs.values()
-        return WebDriverWait(self.driver, *wait_args)
-
     def click_button(self, selector):
         if selector.startswith('//'):
             locator = (By.XPATH, selector)
@@ -84,9 +79,15 @@ class BbcComments:
 def get_bbc_comments(run_args):
     config = load_config_yaml(run_args.config)
 
-    driver = setup_driver(*config['ChromeOptions'])
+    driver_args = config['ChromeOptions']
+    webdriverwait_args = config['WebDriverWait'].values()
+    url = config['target_url']
+    config_site = config['site']
 
-    df = BbcComments(driver, config).scrape(config['target_url'])
+    driver = setup_driver(*driver_args)
+    webdriverwait = WebDriverWait(driver, *webdriverwait_args)
+
+    df = BbcComments(driver, webdriverwait, config_site).scrape(url)
     df.to_csv(args.output, index=False)
 
 
