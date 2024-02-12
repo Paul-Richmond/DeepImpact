@@ -18,8 +18,9 @@ def setup_driver(*args):
     :return selenium.webdriver
     """
     options = ChromeOptions()
-    for arg in args:
-        options.add_argument(arg)
+    if not args:
+        for arg in args:
+            options.add_argument(arg)
 
     try:
         driver = Chrome(service=Service(), options=options)
