@@ -7,7 +7,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from bs4 import BeautifulSoup
 import pandas as pd
 from utils.helpers import setup_driver
-from utils.io import load_config_yaml
+from utils.io import load_config_yaml, export_output
 
 
 class BbcComments:
@@ -133,7 +133,7 @@ def get_bbc_comments(run_args):
     webdriverwait = WebDriverWait(driver, *webdriverwait_args)
 
     df = BbcComments(driver, webdriverwait, config_site).scrape(url)
-    df.to_csv(args.output, index=False)
+    export_output(args.output, df)
 
 
 if __name__ == "__main__":
