@@ -40,47 +40,15 @@ class BbcComments:
         except NoSuchElementException:
             closed = False
 
-        # Repeatedly click on the 'More comments' button until it disappears
-        try:
-            more_comments_button = self.wait.until(EC.presence_of_element_located((By.XPATH,
-                                                                                   self.cfg['bbc_site'][
-                                                                                       'more_comments_button'])))
-            self.driver.execute_script("arguments[0].click();", more_comments_button)
-            button_exists = True
-            button_clicks = 1
-            print(f'Clicked "More comments" button.')
-        except NoSuchElementException:
-            button_exists = False
+        clickables = [self.cfg['bbc_site']['more_comments_button'], self.cfg['bbc_site']['more_replies_button']]
 
-        while button_exists:
-            try:
-                more_comments_button = self.wait.until(EC.presence_of_element_located((By.XPATH,
-                                                                                       self.cfg['bbc_site'][
-                                                                                           'more_comments_button'])))
-                self.driver.execute_script("arguments[0].click();", more_comments_button)
-                button_clicks += 1
-                print(f'Clicked "More comments" button {button_clicks} times.')
-            except TimeoutException:
-                print('Finished clicking "More comments" button.')
-                button_exists = False
-            except WebDriverException as e:
-                print('Something went wrong trying to click "More comments" button.')
-                print(e)
-                button_exists = False
-
-        # why isn't this working after the 13th button?
-        loc_child = ((By.XPATH, '''//button[@class="reply-more-replies__button"]
-        //span[@class="reply-more-replies__text"]'''))
-        keep_clicking = True
-        while keep_clicking:
-            try:
-                mrb = self.wait.until(EC.presence_of_element_located((By.XPATH,
-                                                                      self.cfg['bbc_site']['more_replies_button'])))
-                button_text = mrb.text.rstrip('\ndown')
-                self.driver.execute_script("arguments[0].click();", mrb)
-                self.wait.until_not(EC.text_to_be_present_in_element(loc_child, button_text))
-            except WebDriverException:
-                keep_clicking = False
+        for selector in clickables:
+            while True:
+                button = self.find_element(selector)
+                if button is not None:
+                    self.click_button(button)
+                else:
+                    break
 
         # We've now exposed all the html elements we need to parse the html and extract
         data = self.parse_html()
@@ -94,22 +62,19 @@ class BbcComments:
     def load_website(self, url):
         self.driver.get(url)
 
-    def click_button(self, selector):
-        if selector.startswith('//'):
-            locator = (By.XPATH, selector)
-        else:
-            locator = (By.CLASS_NAME, selector)
-
+    def find_element(self, selector):
         try:
-            self.driver.find_element(*locator).click()
-            return True
-        except NoSuchElementException:
-            try:
-                button = self.wait.until(EC.presence_of_element_located(locator))
-                ActionChains(self.driver).click(button).perform()
-                return True
-            except TimeoutException:
-                return False
+            return self.wait.until(EC.presence_of_element_located((By.XPATH, selector)))
+        except TimeoutException:
+            print(f"Couldn't find element: {selector}")
+            return None
+
+    def click_button(self, button):
+        try:
+            self.driver.execute_script("arguments[0].click();", button)
+            self.wait.until(EC.staleness_of(button))
+        except TimeoutException:
+            pass
 
     def parse_html(self):
         bs = BeautifulSoup(self.driver.page_source, 'html.parser')
