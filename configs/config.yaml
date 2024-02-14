@@ -1,18 +1,12 @@
-ChromeOptions:
-    - --headless
-
-WebDriverWait:
-  timeout: !!float 2.0
-  poll_frequency: !!float 0.5
-  ignored_exceptions: !!null
-
-target_url: https://www.bbc.co.uk/sport/cricket/68128995
+target_url: https://www.bbc.co.uk/news/science-environment-67962397#comments
 
 site:
   bbc_site:
-    comments_button: '//button[@class="view-comments-button"]'
+    comments_closed: '//p[@class="comments__message comments__message--closed-forum"]'
     more_comments_button: '//button[@class="comments-button comments__more-comments-button"]'
     more_replies_button: '//button[@class="reply-more-replies__button"]'
+    more_replies_text: '//button[@class="reply-more-replies__button"]/span[@class="reply-more-replies__text"]'
+    button_text: 'Check for new replies'
     comment_contents: 'comment__content'
 
   data_selectors:
@@ -26,3 +20,11 @@ site:
     - 'Post Date'
     - 'Likes'
     - 'Dislikes'
+
+ChromeOptions:
+#    - --headless
+
+WebDriverWait:
+  timeout: !!float 2.0
+  poll_frequency: !!float 0.5
+  ignored_exceptions: !!null

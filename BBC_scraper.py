@@ -7,7 +7,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from bs4 import BeautifulSoup
 import pandas as pd
 from utils.helpers import setup_driver
-from utils.io import load_config_yaml
+from utils.io import load_config_yaml, export_output
 
 
 class BbcComments:
@@ -18,62 +18,71 @@ class BbcComments:
 
     def scrape(self, url):
 
-        self.driver.get(url)
-        # should check for errors like 404
+        # We check if the url endswith '#comments' and append it if it doesn't.
+        # We do this because BBC News urls that end with '#comments' automatically
+        # expose the first comments removing the need to click on the 'View Comments' button
+        if not url.endswith('#comments'):
+            url += '#comments'
 
-        # click on the 'View Comments' button to expose comments
+        self.load_website(url)
+
+        # found that there is only one iframe in the html which happens
+        # to contain all the elements we need to interact with
+        self.wait.until(EC.frame_to_be_available_and_switch_to_it((By.TAG_NAME, 'iframe')))
+
         '''check for presence of 'These comments are now closed.'
         If it is there we can keep on pressing the 'More comments' button.
         Otherwise we will see the 'Check for new replies button'
-        which can be pressed infintely'''
-        # alternative is 'Sign in to comment, reply and react'
-        self.click_button(self.cfg['bbc_site']['comments_button'])
+        which can be pressed infinitely. Alternative is 'Sign in to comment, reply and react'''
+        try:
+            self.driver.find_element(By.XPATH, self.cfg['bbc_site']['comments_closed'])
+            closed = True
+        except NoSuchElementException:
+            closed = False
 
-        # Repeatedly click on the 'More comments' button until it disappears
-        click_again = True
-        while click_again:
-            click_again = self.click_button(self.cfg['bbc_site']['more_comments_button'])
+        clickables = [self.cfg['bbc_site']['more_comments_button'], self.cfg['bbc_site']['more_replies_button']]
 
-        # Repeatedly click on the 'More replies' buttons
-        more_replies_buttons = self.driver.find_elements(By.XPATH,
-                                                         self.cfg['bbc_site']['more_replies_button'])
-        for button in more_replies_buttons:
+        for selector in clickables:
             while True:
-                try:
-                    ActionChains(self.driver).click(button).perform()
-                except WebDriverException:
+                button = self.find_element(selector)
+                if button is not None:
+                    self.click_button(button)
+                else:
                     break
-        # We've now exposed all the html elements we need to scrape
-        # grab the full html
-        bs = BeautifulSoup(self.driver.page_source, 'html.parser')
-        # BeautifulSoup can't handle xpaths, so we have to class names instead
-        contents = bs.find_all('div', class_=self.cfg['bbc_site']['comment_contents'])
 
-        all_data = [[content.findChild('div', selector).text for selector in self.cfg['data_selectors']]
-                    for content in contents]
+        # We've now exposed all the html elements we need to parse the html and extract
+        data = self.parse_html()
 
         # place the scraped data into a DataFrame
-        df = pd.DataFrame(all_data, columns=self.cfg['df_columns'])
+        df = pd.DataFrame(data, columns=self.cfg['df_columns'])
         self.driver.quit()  # close the webdriver
 
         return df
 
-    def click_button(self, selector):
-        if selector.startswith('//'):
-            locator = (By.XPATH, selector)
-        else:
-            locator = (By.CLASS_NAME, selector)
+    def load_website(self, url):
+        self.driver.get(url)
 
+    def find_element(self, selector):
         try:
-            self.driver.find_element(*locator).click()
-            return True
-        except NoSuchElementException:
-            try:
-                button = self.wait.until(EC.presence_of_element_located(locator))
-                ActionChains(self.driver).click(button).perform()
-                return True
-            except TimeoutException:
-                return False
+            return self.wait.until(EC.presence_of_element_located((By.XPATH, selector)))
+        except TimeoutException:
+            return None
+
+    def click_button(self, button):
+        try:
+            self.driver.execute_script("arguments[0].click();", button)
+            self.wait.until(EC.staleness_of(button))
+        except TimeoutException:
+            pass
+
+    def parse_html(self):
+        bs = BeautifulSoup(self.driver.page_source, 'html.parser')
+        # BeautifulSoup can't handle xpaths, so we have to use class names instead
+        contents = bs.find_all('div', class_=self.cfg['bbc_site']['comment_contents'])
+
+        data = [[content.findChild('div', selector).text for selector in self.cfg['data_selectors']]
+                for content in contents]
+        return data
 
 
 def get_bbc_comments(run_args):
@@ -84,11 +93,11 @@ def get_bbc_comments(run_args):
     url = config['target_url']
     config_site = config['site']
 
-    driver = setup_driver(*driver_args)
+    driver = setup_driver(driver_args)
     webdriverwait = WebDriverWait(driver, *webdriverwait_args)
 
     df = BbcComments(driver, webdriverwait, config_site).scrape(url)
-    df.to_csv(args.output, index=False)
+    export_output(args.output, df)
 
 
 if __name__ == "__main__":
