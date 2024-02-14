@@ -66,7 +66,6 @@ class BbcComments:
         try:
             return self.wait.until(EC.presence_of_element_located((By.XPATH, selector)))
         except TimeoutException:
-            print(f"Couldn't find element: {selector}")
             return None
 
     def click_button(self, button):
