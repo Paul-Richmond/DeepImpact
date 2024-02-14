@@ -11,7 +11,7 @@ I'm assuming that you have Anaconda installed on your Mac machine, if not
 you can download it from [here](https://docs.conda.io/projects/conda/en/stable/). 
 After cloning this repository with
 
-`gh repo clone Paul-Richmond/DeepImpact`, 
+`git clone https://github.com/Paul-Richmond/DeepImpact.git`, 
 
 change directory into the repository and then use:
 
