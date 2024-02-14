@@ -27,11 +27,16 @@ def setup_driver(*args):
     except NoSuchDriverException:
         try:
             # this assumes we are running on a Mac
-            os.environ["SE_MANAGER_PATH"] = os.path.join(os.environ["CONDA_PREFIX"],
-                                                         "bin", "selenium-manager")
+            os.environ["SE_MANAGER_PATH"] = find_file("selenium-manager", os.environ["CONDA_PREFIX"])
             driver = Chrome(service=Service(), options=options)
         except KeyError:
             print('Could not find the selenium-manager. Quitting.')
             raise SystemExit()
 
     return driver
+
+
+def find_file(name, path):
+    for root, dirs, files in os.walk(path):
+        if name in files:
+            return os.path.join(root, name)
