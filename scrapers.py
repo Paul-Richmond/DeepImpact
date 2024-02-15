@@ -27,7 +27,7 @@ class Bbc:
         # to contain all the elements we need to interact with
         self.wait.until(EC.frame_to_be_available_and_switch_to_it((By.TAG_NAME, 'iframe')))
 
-        clickables = [self.cfg['bbc_site']['more_comments_button'], self.cfg['bbc_site']['more_replies_button']]
+        clickables = [self.cfg['control']['more_comments_button'], self.cfg['control']['more_replies_button']]
 
         for selector in clickables:
             while True:
@@ -65,7 +65,7 @@ class Bbc:
     def parse_html(self):
         bs = BeautifulSoup(self.driver.page_source, 'html.parser')
         # BeautifulSoup can't handle xpaths, so we have to use class names instead
-        contents = bs.find_all('div', class_=self.cfg['bbc_site']['comment_contents'])
+        contents = bs.find_all('div', class_=self.cfg['data_container'])
 
         data = [[content.findChild('div', selector).text for selector in self.cfg['data_selectors']]
                 for content in contents]

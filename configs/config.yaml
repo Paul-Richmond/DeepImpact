@@ -1,13 +1,13 @@
-target_url: https://www.bbc.co.uk/news/science-environment-67962397#comments
-
+target_url: https://www.bbc.co.uk/news/science-environment-68172162#comments
+handler: !Cls
+  module: scrapers
+  name: Bbc
 site:
-  bbc_site:
-    comments_closed: '//p[@class="comments__message comments__message--closed-forum"]'
+  control:
     more_comments_button: '//button[@class="comments-button comments__more-comments-button"]'
     more_replies_button: '//button[@class="reply-more-replies__button"]'
-    more_replies_text: '//button[@class="reply-more-replies__button"]/span[@class="reply-more-replies__text"]'
-    button_text: 'Check for new replies'
-    comment_contents: 'comment__content'
+
+  data_container: 'comment__content'
 
   data_selectors:
       - {'class': 'comment__text'}
@@ -20,11 +20,3 @@ site:
     - 'Post Date'
     - 'Likes'
     - 'Dislikes'
-
-ChromeOptions:
-#    - --headless
-
-WebDriverWait:
-  timeout: !!float 2.0
-  poll_frequency: !!float 0.5
-  ignored_exceptions: !!null
