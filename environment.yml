@@ -12,3 +12,4 @@ dependencies:
   - selenium=4.17.2
   - ipykernel=6.29.0
   - pyyaml=6.0.1
+  - tqdm=4.66.2
