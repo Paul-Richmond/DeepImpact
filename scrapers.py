@@ -4,15 +4,60 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.wait import WebDriverWait
 from bs4 import BeautifulSoup
 import pandas as pd
+from tqdm import tqdm
 from utils.helpers import setup_driver
 
 
-class Bbc:
+class Site:
     def __init__(self, url, cfg):
         self.url = url
         self.cfg = cfg
         self.driver = setup_driver()
-        self.wait = WebDriverWait(self.driver, 3)
+        self.wait = WebDriverWait(self.driver, 10)
+
+    def load_website(self, url):
+        self.driver.get(url)
+
+    def find_element(self, selector):
+        try:
+            return self.wait.until(EC.presence_of_element_located((By.XPATH, selector)))
+        except TimeoutException:
+            return None
+
+    def find_elements(self, selector):
+        try:
+            return self.wait.until(EC.presence_of_all_elements_located((By.XPATH, selector)))
+        except TimeoutException:
+            return None
+
+    def click_button(self, button):
+        try:
+            self.driver.execute_script("arguments[0].click();", button)
+            self.wait.until(EC.staleness_of(button))
+        except TimeoutException:
+            pass
+
+    def parse_html(self):
+        bs = BeautifulSoup(self.driver.page_source, 'html.parser')
+        # BeautifulSoup can't handle xpaths, so we have to use class names instead
+        contents = bs.find_all('div', class_=self.cfg['data_container'])
+
+        data = []
+        for content in contents:
+            sub_data = []
+            for selector in self.cfg['data_selectors']:
+                try:
+                    sub_data.append(content.findChild('div', selector).text)
+                except AttributeError:
+                    sub_data.append(None)
+            data.append(sub_data)
+
+        return data
+
+
+class Bbc(Site):
+    def __init__(self, url, cfg):
+        super().__init__(url, cfg)
 
     def scrape(self):
         # We check if the url endswith '#comments' and append it if it doesn't.
@@ -46,27 +91,81 @@ class Bbc:
 
         return df
 
-    def load_website(self, url):
-        self.driver.get(url)
 
-    def find_element(self, selector):
-        try:
-            return self.wait.until(EC.presence_of_element_located((By.XPATH, selector)))
-        except TimeoutException:
-            return None
+class Guardian(Site):
+    def __init__(self, url, cfg):
+        super().__init__(url, cfg)
 
-    def click_button(self, button):
-        try:
-            self.driver.execute_script("arguments[0].click();", button)
-            self.wait.until(EC.staleness_of(button))
-        except TimeoutException:
-            pass
+    def scrape(self):
+        if not self.url.endswith('#comments'):
+            self.url += '#comments'
 
-    def parse_html(self):
-        bs = BeautifulSoup(self.driver.page_source, 'html.parser')
-        # BeautifulSoup can't handle xpaths, so we have to use class names instead
-        contents = bs.find_all('div', class_=self.cfg['data_container'])
+        self.load_website(self.url)
 
-        data = [[content.findChild('div', selector).text for selector in self.cfg['data_selectors']]
-                for content in contents]
-        return data
+        # this code clicks the accept cookies button
+        self.wait.until(EC.frame_to_be_available_and_switch_to_it((By.XPATH, '//iframe[@id="sp_message_iframe_1034325"]')))
+        # self.driver.switch_to.frame(self.driver.find_elements(By.XPATH, '//iframe[@id="sp_message_iframe_1034325"]'))
+        accept_cookies = self.find_element('//button[@title="Yes, I’m happy"]')
+        self.click_button(accept_cookies)
+        self.driver.switch_to.parent_frame()
+
+        # this code clicks the "Display threads" dropdown
+        # and then selects "Unthreaded"
+        dropdowns = self.find_elements('//button[@class="dcr-1pmsv7"]')
+        dropdowns[2].click()
+        unthread = self.find_element('//ul[@id="dropbox-id-threads-dropdown"]/li[3]/button')
+        self.click_button(unthread)
+        # unthread.click()
+
+        # this code works out how many pages of comments there are
+        # first we need the number of comments
+        num_com_str = self.driver.find_element(By.XPATH, '//div[@class="dcr-1je7ksb"]').text
+        num_com_list = num_com_str.split()
+        num_com = int(num_com_list[-1])
+        # then we need the comments displayed per page
+        per_page = int(dropdowns[1].text)
+        # now we work out how many pages we expect in addition to page 1
+        if num_com % per_page == 0:
+            num_addn_pages = int(num_com / per_page - 1)
+        else:
+            num_addn_pages = num_com // per_page  # this is automatically an int
+
+        # check button with class dcr-9boz50 exists, there will be 4 if
+        # they do exist. The 2nd (and 4th) are the ones we want to go to next page
+        # if it doesn't then we get a list of the page buttons
+        page_controls = self.find_elements('//button[@class="dcr-9boz50"]')
+        if page_controls:  # we have a non-empty list
+            page_buttons = page_controls[1]
+        else:
+            page_buttons = self.find_element('//div[@class="dcr-1oo5ahs"]').find_elements(By.TAG_NAME,
+                                                                                          'button')
+        all_data = []
+        # we get the comments on page 1
+        data = self.parse_html()
+        all_data.extend(data)
+
+        for page in tqdm(range(1, 1 + num_addn_pages)):
+            if isinstance(page_buttons, list):
+                self.click_button(page_buttons[page])
+            else:
+                self.click_button(page_buttons)
+                page_buttons = self.find_elements('//button[@class="dcr-9boz50"]')[1]
+            data = self.parse_html()
+            all_data.extend(data)
+
+        # place the scraped data into a DataFrame
+        df = pd.DataFrame(all_data, columns=self.cfg['df_columns'])
+        self.driver.quit()  # close the webdriver
+
+        return df
+
+
+class DailyMail(Site):
+    def __init__(self, url, cfg):
+        super().__init__(url, cfg)
+
+    def scrape(self):
+        if not self.url.endswith('#comments'):
+            self.url += '#comments'
+
+        self.load_website(self.url)
