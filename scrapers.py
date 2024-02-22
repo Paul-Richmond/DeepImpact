@@ -103,23 +103,20 @@ class Guardian(Site):
         self.load_website(self.url)
 
         # this code clicks the accept cookies button
-        self.wait.until(EC.frame_to_be_available_and_switch_to_it((By.XPATH, '//iframe[@id="sp_message_iframe_1034325"]')))
-        # self.driver.switch_to.frame(self.driver.find_elements(By.XPATH, '//iframe[@id="sp_message_iframe_1034325"]'))
-        accept_cookies = self.find_element('//button[@title="Yes, I’m happy"]')
+        self.wait.until(EC.frame_to_be_available_and_switch_to_it((By.XPATH, self.cfg['cookies']['iframe'])))
+        accept_cookies = self.find_element(self.cfg['cookies']['accept_button'])
         self.click_button(accept_cookies)
         self.driver.switch_to.parent_frame()
 
-        # this code clicks the "Display threads" dropdown
-        # and then selects "Unthreaded"
-        dropdowns = self.find_elements('//button[@class="dcr-1pmsv7"]')
-        dropdowns[2].click()
-        unthread = self.find_element('//ul[@id="dropbox-id-threads-dropdown"]/li[3]/button')
-        self.click_button(unthread)
-        # unthread.click()
+        # Focus on the three dropdown elements "Sort by", "Per page" and "Display threads"
+        dropdowns = self.find_elements(self.cfg['dropdown']['dropdown_buttons'])
+        dropdowns[2].click()  # this clicks the "Display threads" dropdown
+        unthread = self.find_element(self.cfg['dropdown']['unthreaded'])  # select "Unthreaded" element
+        self.click_button(unthread)  # click "Unthreaded" element
 
         # this code works out how many pages of comments there are
         # first we need the number of comments
-        num_com_str = self.driver.find_element(By.XPATH, '//div[@class="dcr-1je7ksb"]').text
+        num_com_str = self.driver.find_element(By.XPATH, self.cfg['pages']['comments_number']).text
         num_com_list = num_com_str.split()
         num_com = int(num_com_list[-1])
         # then we need the comments displayed per page
@@ -130,31 +127,33 @@ class Guardian(Site):
         else:
             num_addn_pages = num_com // per_page  # this is automatically an int
 
+        # Find the comments page selection elements
         # check button with class dcr-9boz50 exists, there will be 4 if
         # they do exist. The 2nd (and 4th) are the ones we want to go to next page
         # if it doesn't then we get a list of the page buttons
-        page_controls = self.find_elements('//button[@class="dcr-9boz50"]')
+        page_controls = self.find_elements(self.cfg['pages']['page_control'])
         if page_controls:  # we have a non-empty list
             page_buttons = page_controls[1]
         else:
-            page_buttons = self.find_element('//div[@class="dcr-1oo5ahs"]').find_elements(By.TAG_NAME,
-                                                                                          'button')
-        all_data = []
+            page_buttons = self.find_element(self.cfg['pages']['page_control2']).find_elements(By.TAG_NAME,
+                                                                                               'button')
+        final_data = []
         # we get the comments on page 1
         data = self.parse_html()
-        all_data.extend(data)
+        final_data.extend(data)
 
+        # loop through all the pages of comments
         for page in tqdm(range(1, 1 + num_addn_pages)):
             if isinstance(page_buttons, list):
                 self.click_button(page_buttons[page])
             else:
                 self.click_button(page_buttons)
-                page_buttons = self.find_elements('//button[@class="dcr-9boz50"]')[1]
+                page_buttons = self.find_elements(self.cfg['pages']['page_control'])[1]
             data = self.parse_html()
-            all_data.extend(data)
+            final_data.extend(data)
 
         # place the scraped data into a DataFrame
-        df = pd.DataFrame(all_data, columns=self.cfg['df_columns'])
+        df = pd.DataFrame(final_data, columns=self.cfg['df_columns'])
         self.driver.quit()  # close the webdriver
 
         return df
