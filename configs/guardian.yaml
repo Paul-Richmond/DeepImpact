@@ -1,0 +1,28 @@
+#target_url: https://www.theguardian.com/football/2024/feb/19/premier-league-10-talking-points-from-the-weekends-action#comments
+target_url: https://www.theguardian.com/australia-news/2024/feb/01/when-testing-costs-you-the-genetic-dilemma-confronting-australians-with-life-insurance#comments
+handler: !Cls
+  module: scrapers
+  name: Guardian
+site:
+  cookies:
+    iframe: '//iframe[@id="sp_message_iframe_1034325"]'
+    accept_button: '//button[@title="Yes, I’m happy"]'
+  dropdown:
+    dropdown_buttons: '//button[@class="dcr-1pmsv7"]' #"Sort by", "Per page" and "Display threads" elements
+    unthreaded: '//ul[@id="dropbox-id-threads-dropdown"]/li[3]/button'
+  pages:
+    comments_number: '//div[@class="dcr-1je7ksb"]' #"Displaying comments x to y of z" element
+    page_control_fb: '//button[@class="dcr-9boz50"]' #these are the forward/backward buttons
+    page_control_numbered: '//div[@class="dcr-1oo5ahs"]' #this is the container for the numbered pages
+
+  data_container: "dcr-13lsspl"
+
+  data_selectors:
+      - {'class': "dcr-gg6f4t"} #this is the comment text
+      - {'class': "dcr-1w1uo7g"} #this is the time the comment was posted
+      - {'class': "dcr-18si932"} #this is upvote number
+
+  df_columns:
+    - 'Comment'
+    - 'Post Date'
+    - 'Likes'
