@@ -54,6 +54,9 @@ class Site:
 
         return data
 
+    def data_to_dataframe(self, data):
+        return pd.DataFrame(data, columns=self.cfg['df_columns'])
+
 
 class Bbc(Site):
     def __init__(self, url, cfg):
@@ -85,8 +88,7 @@ class Bbc(Site):
         # We've now exposed all the html elements we need to parse the html and extract
         data = self.parse_html()
 
-        # place the scraped data into a DataFrame
-        df = pd.DataFrame(data, columns=self.cfg['df_columns'])
+        df = self.data_to_dataframe(data)  # place the scraped data into a DataFrame
         self.driver.quit()  # close the webdriver
 
         return df
@@ -152,8 +154,7 @@ class Guardian(Site):
             data = self.parse_html()
             final_data.extend(data)
 
-        # place the scraped data into a DataFrame
-        df = pd.DataFrame(final_data, columns=self.cfg['df_columns'])
+        df = self.data_to_dataframe(final_data)  # place the scraped data into a DataFrame
         self.driver.quit()  # close the webdriver
 
         return df
