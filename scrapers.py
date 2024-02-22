@@ -133,12 +133,12 @@ class Guardian(Site):
         # check button with class dcr-9boz50 exists, there will be 4 if
         # they do exist. The 2nd (and 4th) are the ones we want to go to next page
         # if it doesn't then we get a list of the page buttons
-        page_controls = self.find_elements(self.cfg['pages']['page_control'])
+        page_controls = self.find_elements(self.cfg['pages']['page_control_fb'])
         if page_controls:  # we have a non-empty list
             page_buttons = page_controls[1]
         else:
-            page_buttons = self.find_element(self.cfg['pages']['page_control2']).find_elements(By.TAG_NAME,
-                                                                                               'button')
+            page_buttons = self.find_element(
+                self.cfg['pages']['page_control_numbered']).find_elements(By.TAG_NAME,'button')
         final_data = []
         # we get the comments on page 1
         data = self.parse_html()
