@@ -7,13 +7,13 @@ site:
   cookies:
     iframe: '//iframe[@id="sp_message_iframe_1034325"]'
     accept_button: '//button[@title="Yes, I’m happy"]'
-  dropdown:
-    dropdown_buttons: '//button[@class="dcr-1pmsv7"]' #"Sort by", "Per page" and "Display threads" elements
-    unthreaded: '//ul[@id="dropbox-id-threads-dropdown"]/li[3]/button'
+
   pages:
-    comments_number: '//div[@class="dcr-1je7ksb"]' #"Displaying comments x to y of z" element
-    page_control_fb: '//button[@class="dcr-9boz50"]' #these are the forward/backward buttons
-    page_control_numbered: '//div[@class="dcr-1oo5ahs"]' #this is the container for the numbered pages
+    comments_column: '//ul[@class="dcr-nert7h"]'
+    page_control_element: '//div[@class="dcr-1oo5ahs"]'
+    more_replies_button: '//button[@class="dcr-1c7mnzn"]'
+    page_forward_button: './/button[@class="dcr-kgohvx"]'
+    page_numbered_buttons: './/button' #this is the container for the numbered pages
 
   data_container: "dcr-13lsspl"
 

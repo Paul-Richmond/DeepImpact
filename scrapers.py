@@ -1,10 +1,10 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver.support.wait import WebDriverWait
 from bs4 import BeautifulSoup
 import pandas as pd
-from tqdm import tqdm
+# from tqdm import trange
 from utils.helpers import setup_driver
 
 
@@ -13,7 +13,7 @@ class Site:
         self.url = url
         self.cfg = cfg
         self.driver = setup_driver()
-        self.wait = WebDriverWait(self.driver, 10)
+        self.wait = WebDriverWait(self.driver, 1.5)
 
     def load_website(self, url):
         self.driver.get(url)
@@ -104,60 +104,57 @@ class Guardian(Site):
 
         self.load_website(self.url)
 
+        self.accept_cookies()  # get rid of the "It's your choice" pop-up window
+
+        data = []
+
+        pages_control_element = self.find_element(self.cfg['pages']['page_control_element'])
+        try:
+            page_control = pages_control_element.find_element(By.XPATH, self.cfg['pages']['page_forward_button'])
+        except NoSuchElementException:
+            page_control = pages_control_element.find_elements(By.XPATH, self.cfg['pages']['page_numbered_buttons'])
+
+        if isinstance(page_control, list):
+            for page_button in page_control:
+                page_button.click()
+                self.wait.until(EC.presence_of_element_located((By.XPATH, self.cfg['pages']['comments_column'])))
+                self.expand_more_replies()
+                page_data = self.parse_html()
+                data.extend(page_data)
+        else:
+            # parse page 1
+            self.expand_more_replies()
+            page_data = self.parse_html()
+            data.extend(page_data)
+            while True:  # keep on clicking the page forward button
+                try:
+                    page_control.click()
+                    self.wait.until(EC.presence_of_element_located((By.XPATH, self.cfg['pages']['comments_column'])))
+                    self.expand_more_replies()
+                    page_data = self.parse_html()
+                    data.extend(page_data)
+                except StaleElementReferenceException:
+                    break
+
+        df = self.data_to_dataframe(data)  # place the scraped data into a DataFrame
+        self.driver.quit()  # close the webdriver
+
+        return df
+
+    def expand_more_replies(self):
+        while True:  # expand all the 'show x more reply/replies' button
+            button = self.find_element(self.cfg['pages']['more_replies_button'])
+            if button is not None:
+                self.click_button(button)
+            else:
+                break
+
+    def accept_cookies(self):
         # this code clicks the accept cookies button
         self.wait.until(EC.frame_to_be_available_and_switch_to_it((By.XPATH, self.cfg['cookies']['iframe'])))
         accept_cookies = self.find_element(self.cfg['cookies']['accept_button'])
         self.click_button(accept_cookies)
         self.driver.switch_to.parent_frame()
-
-        # Focus on the three dropdown elements "Sort by", "Per page" and "Display threads"
-        dropdowns = self.find_elements(self.cfg['dropdown']['dropdown_buttons'])
-        dropdowns[2].click()  # this clicks the "Display threads" dropdown
-        unthread = self.find_element(self.cfg['dropdown']['unthreaded'])  # select "Unthreaded" element
-        self.click_button(unthread)  # click "Unthreaded" element
-
-        # this code works out how many pages of comments there are
-        # first we need the number of comments
-        num_com_str = self.driver.find_element(By.XPATH, self.cfg['pages']['comments_number']).text
-        num_com_list = num_com_str.split()
-        num_com = int(num_com_list[-1])
-        # then we need the comments displayed per page
-        per_page = int(dropdowns[1].text)
-        # now we work out how many pages we expect in addition to page 1
-        if num_com % per_page == 0:
-            num_addn_pages = int(num_com / per_page - 1)
-        else:
-            num_addn_pages = num_com // per_page  # this is automatically an int
-
-        # Find the comments page selection elements
-        # check button with class dcr-9boz50 exists, there will be 4 if
-        # they do exist. The 2nd (and 4th) are the ones we want to go to next page
-        # if it doesn't then we get a list of the page buttons
-        page_controls = self.find_elements(self.cfg['pages']['page_control_fb'])
-        if page_controls:  # we have a non-empty list
-            page_buttons = page_controls[1]
-        else:
-            page_buttons = self.find_element(
-                self.cfg['pages']['page_control_numbered']).find_elements(By.TAG_NAME,'button')
-        final_data = []
-        # we get the comments on page 1
-        data = self.parse_html()
-        final_data.extend(data)
-
-        # loop through all the pages of comments
-        for page in tqdm(range(1, 1 + num_addn_pages)):
-            if isinstance(page_buttons, list):
-                self.click_button(page_buttons[page])
-            else:
-                self.click_button(page_buttons)
-                page_buttons = self.find_elements(self.cfg['pages']['page_control'])[1]
-            data = self.parse_html()
-            final_data.extend(data)
-
-        df = self.data_to_dataframe(final_data)  # place the scraped data into a DataFrame
-        self.driver.quit()  # close the webdriver
-
-        return df
 
 
 class DailyMail(Site):
