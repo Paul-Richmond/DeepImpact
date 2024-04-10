@@ -1,0 +1,39 @@
+target_url: https://www.dailymail.co.uk/sciencetech/article-13108627/I-tried-AI-face-scanning-app-dubbed-disturbing-site-internet-hunts-photos-never-knew-existed.html#comments
+handler: !Cls
+  module: scrapers
+  name: DailyMail
+site:
+  cookies: 
+      window: '//button[@class="button_cVc76 basic_PnsIU"]'
+      reject_all: '//*[@id="sciencetech"]/div[6]/div/div/div/div[3]/div/div[4]/button[1]'
+      save_and_exit: '//*[@id="sciencetech"]/div[6]/div/div/div/div[4]/button[2]'
+  
+  control:
+    shadow_root: '//div[@id="reader-comments"]/div/*[1]' 
+    more_comments_button: 'spcv_load-more-messages'
+    show_more_replies: 'spcv_showMoreRepliesText'
+    see_more: 'components-MessageLayout-index__messageWrapper'
+    
+  data_container: 'spcv_conversation'
+  contents_container: 'components-MessageLayout-index__message-view'
+
+  data_selectors:
+    - - div
+      - data-spot-im-class: message-text
+    - - time
+    - - button
+      - aria-label: Vote Up
+    - - button
+      - aria-label: Vote Down
+    - - span
+      - data-spot-im-class: message-username
+    - - span
+      - class: Typography__text--11-5-2 Typography__t5--11-5-2 Typography__l5--11-5-2
+
+  df_columns:
+    - 'Comment'
+    - 'Post Date'
+    - 'Up Votes'
+    - 'Down Votes'
+    - 'Username'
+    - 'Location'
