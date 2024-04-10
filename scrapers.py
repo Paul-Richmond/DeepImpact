@@ -159,6 +159,7 @@ class Guardian(Site):
 
 class DailyMail(Site):
     def __init__(self, url, cfg):
+        self.sr = None
         super().__init__(url, cfg)
 
     def scrape(self):
@@ -166,3 +167,81 @@ class DailyMail(Site):
             self.url += '#comments'
 
         self.load_website(self.url)
+
+        self.decline_cookies()
+
+        self.sr = self.get_shadow_root()
+
+        self.expand_show_more_comments()
+        self.expand_more_replies()
+        self.expand_see_more()
+
+        data = self.parse_html()
+        df = self.data_to_dataframe(data)  # place the scraped data into a DataFrame
+        self.driver.quit()  # close the webdriver
+
+        return df
+
+    def decline_cookies(self):
+        cookie_window = self.find_element(self.cfg['cookies']['window'])
+        self.click_button(cookie_window)
+        reject_all_button = self.find_element(self.cfg['cookies']['reject_all'])
+        self.click_button(reject_all_button)
+        save_and_exit_button = self.find_element(self.cfg['cookies']['save_and_exit'])
+        self.click_button(save_and_exit_button)
+
+    def get_shadow_root(self):
+        return self.find_element(self.cfg['control']['shadow_root']).shadow_root
+
+    def expand_show_more_comments(self):
+        while True:  # expand all the 'Show More Comments' button
+            try:
+                button = self.sr.find_element(By.CLASS_NAME,
+                                              self.cfg['control']['more_comments_button'])
+                button.click()
+            except:
+                break
+
+    def expand_more_replies(self):
+        while True:
+            more_replies_buts = self.sr.find_elements(By.CLASS_NAME,
+                                                      self.cfg['control']['show_more_replies'])
+            if len(more_replies_buts) != 0:
+                for but in more_replies_buts:
+                    self.click_button(but)
+            else:
+                break
+
+    def expand_see_more(self):
+        while True:
+            comment_blocks = self.sr.find_elements(By.CLASS_NAME,
+                                                   self.cfg['control']['see_more'])
+            buttons_clicked = 0
+            for comment_block in comment_blocks:
+                span_elements = comment_block.find_elements(By.CSS_SELECTOR, 'span')
+                for span_element in span_elements:
+                    if span_element.text == 'See more':
+                        span_element.click()
+                        buttons_clicked += 1
+            if buttons_clicked == 0:
+                break
+
+    def parse_html(self):
+        data_container = self.sr.find_element(By.CLASS_NAME, self.cfg['data_container'])
+        html_of_interest = self.driver.execute_script('return arguments[0].innerHTML',
+                                                      data_container)
+        bs = BeautifulSoup(html_of_interest, 'html.parser')
+        # BeautifulSoup can't handle xpaths, so we have to use class names instead
+        contents = bs.find_all('div', class_=self.cfg['contents_container'])
+
+        data = []
+        for content in contents:
+            sub_data = []
+            for selector in self.cfg['data_selectors']:
+                try:
+                    sub_data.append(content.find(*selector).text)
+                except AttributeError:
+                    sub_data.append(None)
+            data.append(sub_data)
+
+        return data
