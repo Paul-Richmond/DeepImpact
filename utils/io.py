@@ -1,5 +1,5 @@
 import yaml
-import pandas as pd
+import json
 
 
 # The cls_loader and get_loader functions are slight modifications
@@ -24,5 +24,9 @@ def load_config_yaml(filepath):
     return parameters
 
 
-def export_output(filepath, data):
-    data.to_csv(filepath, index=False)
+def export_output(filepath, url, data):
+    """Export the url and data to a json file."""
+    data_as_dict = data.to_dict(orient="split")
+    data_as_dict.update({"url": url})
+    with open(filepath, 'w') as f:
+        json.dump(data_as_dict, f)

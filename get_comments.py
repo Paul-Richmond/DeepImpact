@@ -14,7 +14,7 @@ def get_comments(run_args):
 
     scraper = config["handler"](url, config_site)
     df = scraper.scrape()
-    export_output(run_args.output, df)
+    export_output(run_args.output, url, df)
 
 
 if __name__ == "__main__":
