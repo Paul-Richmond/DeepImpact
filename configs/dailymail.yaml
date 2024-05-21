@@ -1,4 +1,3 @@
-target_url: https://www.dailymail.co.uk/sciencetech/article-13108627/I-tried-AI-face-scanning-app-dubbed-disturbing-site-internet-hunts-photos-never-knew-existed.html#comments
 handler: !Cls
   module: scrapers
   name: DailyMail
