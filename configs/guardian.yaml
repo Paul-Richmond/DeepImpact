@@ -3,21 +3,21 @@ handler: !Cls
   name: Guardian
 site:
   cookies:
-    iframe: '//iframe[@id="sp_message_iframe_1034325"]'
-    accept_button: '//button[@title="Yes, I’m happy"]'
+    iframe: '//iframe[@title="The Guardian consent message"]'
+    accept_button: '//button[contains(text(),"Yes")]'
 
   pages:
-    comments_column: '//ul[@class="dcr-nert7h"]'
-    page_control_element: '//div[@class="dcr-1oo5ahs"]'
-    more_replies_button: '//button[@class="dcr-1c7mnzn"]'
-    page_forward_button: './/button[@class="dcr-kgohvx"]'
+    comments_column: '//div[@data-component="discussion"]'
+    page_control_element: '//div[@class="dcr-gdjgj3"]'
+    more_replies_button: '//button[@data-link-name="Show more replies"]'
+    page_forward_button: './/button[@class="dcr-sy54ny"]'
     page_numbered_buttons: './/button' #this is the container for the numbered pages
 
-  data_container: "dcr-13lsspl"
+  data_container: "dcr-qo6we0"
 
   data_selectors:
-      - {'class': "dcr-gg6f4t"} #this is the comment text
-      - {'class': "dcr-1w1uo7g"} #this is the time the comment was posted
+      - {'class': "dcr-gkexou"} #this is the comment text
+      - {'class': "dcr-1atl19p"} #this is the time the comment was posted
       - {'class': "dcr-18si932"} #this is upvote number
 
   df_columns:
