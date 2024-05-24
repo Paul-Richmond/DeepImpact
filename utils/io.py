@@ -26,7 +26,7 @@ def load_config_yaml(filepath):
 
 def export_output(filepath, url, data):
     """Export the url and data to a json file."""
-    data_as_dict = data.to_dict(orient="split")
+    data_as_dict = data.to_dict()
     data_as_dict.update({"url": url})
     with open(filepath, 'w') as f:
         json.dump(data_as_dict, f)
