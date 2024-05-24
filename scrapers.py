@@ -73,7 +73,7 @@ class Bbc(Site):
 
         # found that there is only one iframe in the html which happens
         # to contain all the elements we need to interact with
-        self.wait.until(EC.frame_to_be_available_and_switch_to_it((By.TAG_NAME, 'iframe')))
+        # self.wait.until(EC.frame_to_be_available_and_switch_to_it((By.TAG_NAME, 'iframe')))
 
         clickables = [self.cfg['control']['more_comments_button'], self.cfg['control']['more_replies_button']]
 
@@ -93,6 +93,33 @@ class Bbc(Site):
 
         return df
 
+    def parse_html(self):
+        bs = BeautifulSoup(self.driver.page_source, 'html.parser')
+        # BeautifulSoup can't handle xpaths, so we have to use class names instead
+        contents = bs.find_all('div', class_=self.cfg['data_container'])
+
+        data = []
+        for content in contents:
+            sub_data = []
+            for selector in self.cfg['data_selectors']:
+                try:
+                    sub_data.append(content.find(**selector).text)
+                except AttributeError:
+                    sub_data.append(None)
+            data.append(sub_data)
+
+            replies = content.find_all(**self.cfg['reply'])
+            if replies is not None:
+                for reply in replies:
+                    sub_data = []
+                    for selector in self.cfg['reply_selectors']:
+                        try:
+                            sub_data.append(reply.find(**selector).text)
+                        except AttributeError:
+                            sub_data.append(None)
+                    data.append(sub_data)
+
+        return data
 
 class Guardian(Site):
     def __init__(self, url, cfg):
@@ -198,7 +225,7 @@ class DailyMail(Site):
             try:
                 button = self.sr.find_element(By.CLASS_NAME,
                                               self.cfg['control']['more_comments_button'])
-                button.click()
+                self.click_button(button)
             except:
                 break
 
@@ -221,7 +248,7 @@ class DailyMail(Site):
                 span_elements = comment_block.find_elements(By.CSS_SELECTOR, 'span')
                 for span_element in span_elements:
                     if span_element.text == 'See more':
-                        span_element.click()
+                        self.click_button(span_element)
                         buttons_clicked += 1
             if buttons_clicked == 0:
                 break

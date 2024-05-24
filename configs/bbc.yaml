@@ -3,16 +3,24 @@ handler: !Cls
   name: Bbc
 site:
   control:
-    more_comments_button: '//button[@class="comments-button comments__more-comments-button"]'
-    more_replies_button: '//button[@class="reply-more-replies__button"]'
+    more_comments_button: '//button[contains(text(),"More comments")]'
+    more_replies_button: '//button[@id="moreReplies"]'
 
-  data_container: 'comment__content'
+  data_container: 'ssrcss-uchyry-CommentWrapper e126ob1s4'
 
   data_selectors:
-      - {'class': 'comment__text'}
-      - {'class': 'posted-date comment__posted-date'}
-      - {'class': 'comment-rating__button-number'}
-      - {'class': 'comment__down-ratings'}
+      - {"name": "div", "class_": "ssrcss-wplbgm-CommentBody e1qss76f0"}
+      - {"name": "h4", "class_": "ssrcss-1dg0ab2-Date eg5u43k0"}
+      - {"name": "span", "data-testid": "positive-reaction-count"}
+      - {"name": "span", "data-testid": "negative-reaction-count"}
+
+  reply: {"name": "div", "class_": "ssrcss-11z3t6j-ReplyBox etfy88f3"}
+
+  reply_selectors:
+      - {"name": "div", "class_": "ssrcss-1q2kafk-ReplyBody etfy88f4"}
+      - {"name": "h4", "class_": "ssrcss-1dg0ab2-Date eg5u43k0"}
+      - {"name": "span", "data-testid": "positive-reaction-count"}
+      - {"name": "span", "data-testid": "negative-reaction-count"}
 
   df_columns:
     - 'Comment'

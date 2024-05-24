@@ -4,8 +4,8 @@ handler: !Cls
 site:
   cookies: 
       window: '//button[@class="button_cVc76 basic_PnsIU"]'
-      reject_all: '//*[@id="sciencetech"]/div[6]/div/div/div/div[3]/div/div[4]/button[1]'
-      save_and_exit: '//*[@id="sciencetech"]/div[6]/div/div/div/div[4]/button[2]'
+      reject_all: '//*[@id="sciencetech"]/div[5]/div/div/div/div[3]/div/div[4]/button[1]'
+      save_and_exit: '//*[@id="sciencetech"]/div[5]/div/div/div/div[4]/button[2]'
   
   control:
     shadow_root: '//div[@id="reader-comments"]/div/*[1]' 
