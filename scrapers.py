@@ -37,17 +37,17 @@ class Site:
         except TimeoutException:
             pass
 
-    def parse_html(self):
-        bs = BeautifulSoup(self.driver.page_source, 'html.parser')
+    def parse_html(self, page_source):
+        bs = BeautifulSoup(page_source, 'html.parser')
         # BeautifulSoup can't handle xpaths, so we have to use class names instead
-        contents = bs.find_all('div', class_=self.cfg['data_container'])
+        contents = bs.find_all(**self.cfg['data_container'])
 
         data = []
         for content in contents:
             sub_data = []
             for selector in self.cfg['data_selectors']:
                 try:
-                    sub_data.append(content.findChild('div', selector).text)
+                    sub_data.append(content.find(**selector).text)
                 except AttributeError:
                     sub_data.append(None)
             data.append(sub_data)
@@ -86,17 +86,17 @@ class Bbc(Site):
                     break
 
         # We've now exposed all the html elements we need to parse the html and extract
-        data = self.parse_html()
+        data = self.parse_html(self.driver.page_source)
 
         df = self.data_to_dataframe(data)  # place the scraped data into a DataFrame
         self.driver.quit()  # close the webdriver
 
         return df
 
-    def parse_html(self):
-        bs = BeautifulSoup(self.driver.page_source, 'html.parser')
+    def parse_html(self, page_source):
+        bs = BeautifulSoup(page_source, 'html.parser')
         # BeautifulSoup can't handle xpaths, so we have to use class names instead
-        contents = bs.find_all('div', class_=self.cfg['data_container'])
+        contents = bs.find_all(**self.cfg['data_container'])
 
         data = []
         for content in contents:
@@ -120,6 +120,7 @@ class Bbc(Site):
                     data.append(sub_data)
 
         return data
+
 
 class Guardian(Site):
     def __init__(self, url, cfg):
@@ -146,19 +147,19 @@ class Guardian(Site):
                 page_button.click()
                 self.wait.until(EC.presence_of_element_located((By.XPATH, self.cfg['pages']['comments_column'])))
                 self.expand_more_replies()
-                page_data = self.parse_html()
+                page_data = self.parse_html(self.driver.page_source)
                 data.extend(page_data)
         else:
             # parse page 1
             self.expand_more_replies()
-            page_data = self.parse_html()
+            page_data = self.parse_html(self.driver.page_source)
             data.extend(page_data)
             while True:  # keep on clicking the page forward button
                 try:
                     page_control.click()
                     self.wait.until(EC.presence_of_element_located((By.XPATH, self.cfg['pages']['comments_column'])))
                     self.expand_more_replies()
-                    page_data = self.parse_html()
+                    page_data = self.parse_html(self.driver.page_source)
                     data.extend(page_data)
                 except StaleElementReferenceException:
                     break
@@ -203,7 +204,11 @@ class DailyMail(Site):
         self.expand_more_replies()
         self.expand_see_more()
 
-        data = self.parse_html()
+        main_container = self.sr.find_element(By.CLASS_NAME, self.cfg['main_container'])
+        page_source = self.driver.execute_script('return arguments[0].innerHTML',
+                                                 main_container)
+
+        data = self.parse_html(page_source)
         df = self.data_to_dataframe(data)  # place the scraped data into a DataFrame
         self.driver.quit()  # close the webdriver
 
@@ -252,23 +257,3 @@ class DailyMail(Site):
                         buttons_clicked += 1
             if buttons_clicked == 0:
                 break
-
-    def parse_html(self):
-        data_container = self.sr.find_element(By.CLASS_NAME, self.cfg['data_container'])
-        html_of_interest = self.driver.execute_script('return arguments[0].innerHTML',
-                                                      data_container)
-        bs = BeautifulSoup(html_of_interest, 'html.parser')
-        # BeautifulSoup can't handle xpaths, so we have to use class names instead
-        contents = bs.find_all('div', class_=self.cfg['contents_container'])
-
-        data = []
-        for content in contents:
-            sub_data = []
-            for selector in self.cfg['data_selectors']:
-                try:
-                    sub_data.append(content.find(*selector).text)
-                except AttributeError:
-                    sub_data.append(None)
-            data.append(sub_data)
-
-        return data

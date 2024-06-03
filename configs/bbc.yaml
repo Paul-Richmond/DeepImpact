@@ -6,7 +6,7 @@ site:
     more_comments_button: '//button[contains(text(),"More comments")]'
     more_replies_button: '//button[@id="moreReplies"]'
 
-  data_container: 'ssrcss-uchyry-CommentWrapper e126ob1s4'
+  data_container: {"name": "div", "class_": "ssrcss-uchyry-CommentWrapper e126ob1s4"}
 
   data_selectors:
       - {"name": "div", "class_": "ssrcss-wplbgm-CommentBody e1qss76f0"}

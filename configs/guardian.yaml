@@ -13,12 +13,12 @@ site:
     page_forward_button: './/button[@class="dcr-sy54ny"]'
     page_numbered_buttons: './/button' #this is the container for the numbered pages
 
-  data_container: "dcr-qo6we0"
+  data_container: {"name": "div", "class_": "dcr-qo6we0"}
 
   data_selectors:
-      - {'class': "dcr-gkexou"} #this is the comment text
-      - {'class': "dcr-1atl19p"} #this is the time the comment was posted
-      - {'class': "dcr-18si932"} #this is upvote number
+      - {"name": "div", 'class_': "dcr-gkexou"} #this is the comment text
+      - {"name": "div", 'class_': "dcr-1atl19p"} #this is the time the comment was posted
+      - {"name": "div", 'class_': "dcr-18si932"} #this is upvote number
 
   df_columns:
     - 'Comment'
