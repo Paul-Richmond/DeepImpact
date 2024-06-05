@@ -22,7 +22,7 @@ site:
     - {"name": "button", "aria-label": "Vote Up"}
     - {"name": "button", "aria-label": "Vote Down"}
     - {"name": "span", "data-spot-im-class": "message-username"}
-    - {"name": "span", "class_": "Typography__text--11-5-2 Typography__t5--11-5-2 Typography__l5--11-5-2"}
+    - {"name": "span", "class_": "Typography__text--11-5-3 Typography__t5--11-5-3 Typography__l5--11-5-3"}
 
   df_columns:
     - 'Comment'
