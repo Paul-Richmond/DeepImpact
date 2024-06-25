@@ -3,8 +3,8 @@ handler: !Cls
   name: Bbc
 site:
   control:
-    more_comments_button: '//button[contains(text(),"More comments")]'
-    more_replies_button: '//button[@id="moreReplies"]'
+    more_comments_button: '//button[contains(text(), "More comments")]'
+    more_replies_button: '//button[contains(text(), "More repl")]'
 
   data_container: {"name": "div", "class_": "ssrcss-uchyry-CommentWrapper e126ob1s4"}
 
@@ -17,7 +17,7 @@ site:
   reply: {"name": "div", "class_": "ssrcss-11z3t6j-ReplyBox etfy88f3"}
 
   reply_selectors:
-      - {"name": "div", "class_": "ssrcss-1q2kafk-ReplyBody etfy88f4"}
+      - {"name": "div", "class_": "ssrcss-1kq3nj-ReplyBody etfy88f4"}
       - {"name": "h4", "class_": "ssrcss-1dg0ab2-Date eg5u43k0"}
       - {"name": "span", "data-testid": "positive-reaction-count"}
       - {"name": "span", "data-testid": "negative-reaction-count"}
