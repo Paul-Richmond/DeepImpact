@@ -1,33 +1,61 @@
-handler: !Cls
-  module: scrapers
-  name: DailyMail
-site:
-  cookies: 
-      window: '//button[@class="button_cVc76 basic_PnsIU"]'
-      reject_all: '//*[@id="sciencetech"]/div[5]/div/div/div/div[3]/div/div[4]/button[1]'
-      save_and_exit: '//*[@id="sciencetech"]/div[5]/div/div/div/div[4]/button[2]'
-  
-  control:
-    shadow_root: '//div[@id="reader-comments"]/div/*[1]' 
-    more_comments_button: 'spcv_load-more-messages'
-    show_more_replies: 'spcv_showMoreRepliesText'
-    see_more: 'components-MessageLayout-index__messageWrapper'
-    
-  main_container: 'spcv_conversation'
-  data_container: {"name": "div", "class_": "components-MessageLayout-index__message-view"}
+dm_cfg1:
+  accept_cookies_selector:
+    name: Accept
+    role: button
+  reorder_comments_first: true
+  comments_order_selector:
+    name: Oldest
+    role: button
+  page_buttons_selector:
+    id: li
+  more_comments_selectors:
+  - label: !!python/object/apply:re._compile
+    - 'Show more(?:\s+comments)?'
+    - 32
+  - label: !!python/object/apply:re._compile
+    - '(?:Show more|See all)\s+replies'
+    - 32
+  - text: See more
+  comments_container_selector:
+    id: '#reader-comments'
 
-  data_selectors:
-    - {"name": "div", "data-spot-im-class": "message-text"}
-    - {"name": "time"}
-    - {"name": "button", "aria-label": "Vote Up"}
-    - {"name": "button", "aria-label": "Vote Down"}
-    - {"name": "span", "data-spot-im-class": "message-username"}
-    - {"name": "span", "class_": "Typography__text--11-5-3 Typography__t5--11-5-3 Typography__l5--11-5-3"}
 
-  df_columns:
-    - 'Comment'
-    - 'Post Date'
-    - 'Up Votes'
-    - 'Down Votes'
-    - 'Username'
-    - 'Location'
+dm_cfg2:
+  accept_cookies_selector:
+    name: Accept
+    role: button
+  reorder_comments_first: true
+  comments_order_selector:
+    name: Oldest
+    role: button
+  page_buttons_selector:
+    id: li
+  more_comments_selectors:
+    - label: !!python/object/apply:re._compile
+        - 'Show more(?:\s+comments)?'
+        - 32
+    - label: !!python/object/apply:re._compile
+        - '(?:Show more|See all)\s+replies'
+        - 32
+    - text: See more
+  comments_container_selector:
+    label: List of Comments
+
+
+dm_cfg0:
+  accept_cookies_selector:
+    name: Accept
+    role: button
+  reorder_comments_first: true
+  comments_order_selector:
+    name: Oldest
+    role: button
+  expose_initial_comments_selector:
+    name: View all
+    role: button
+  page_buttons_selector:
+    id: li
+  more_comments_selectors:
+    - text: See all replies
+  comments_container_selector:
+    id: '#reader-comments'

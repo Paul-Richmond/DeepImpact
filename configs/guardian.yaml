@@ -1,26 +1,50 @@
-handler: !Cls
-  module: scrapers
-  name: Guardian
-site:
-  cookies:
-    iframe: '//iframe[@title="The Guardian consent message"]'
-    accept_button: '//button[contains(text(),"Yes")]'
+#handler: !Cls
+#  module: scrapers
+#  name: Guardian
+#site:
+#  cookies:
+#    iframe: '//iframe[@title="The Guardian consent message"]'
+#    accept_button: '//button[contains(text(),"Yes")]'
+#
+#  pages:
+#    comments_column: '//div[@data-component="discussion"]'
+#    page_control_element: '//div[@class="dcr-gdjgj3"]'
+#    more_replies_button: '//button[@data-link-name="Show more replies"]'
+#    page_forward_button: './/button[@class="dcr-sy54ny"]'
+#    page_numbered_buttons: './/button' #this is the container for the numbered pages
+#
+#  data_container: {"name": "div", "class_": "dcr-qo6we0"}
+#
+#  data_selectors:
+#      - {"name": "div", 'class_': "dcr-gkexou"} #this is the comment text
+#      - {"name": "div", 'class_': "dcr-1atl19p"} #this is the time the comment was posted
+#      - {"name": "div", 'class_': "dcr-18si932"} #this is upvote number
+#
+#  df_columns:
+#    - 'Comment'
+#    - 'Post Date'
+#    - 'Likes'
 
-  pages:
-    comments_column: '//div[@data-component="discussion"]'
-    page_control_element: '//div[@class="dcr-gdjgj3"]'
-    more_replies_button: '//button[@data-link-name="Show more replies"]'
-    page_forward_button: './/button[@class="dcr-sy54ny"]'
-    page_numbered_buttons: './/button' #this is the container for the numbered pages
-
-  data_container: {"name": "div", "class_": "dcr-qo6we0"}
-
-  data_selectors:
-      - {"name": "div", 'class_': "dcr-gkexou"} #this is the comment text
-      - {"name": "div", 'class_': "dcr-1atl19p"} #this is the time the comment was posted
-      - {"name": "div", 'class_': "dcr-18si932"} #this is upvote number
-
-  df_columns:
-    - 'Comment'
-    - 'Post Date'
-    - 'Likes'
+guardian_cfg0:
+  accept_cookies_selector:
+    text: "iframe[title=\"The Guardian consent message\"]"
+    label: Yes, I accept
+#  expose_initial_comments_selector:
+#    name: View more comments
+#    role: button
+  reorder_comments_first: false
+  comments_order_selector:
+    name: Oldest
+    role: button
+  page_buttons_selector:
+    id: li
+  more_comments_selectors:
+    - label: !!python/object/apply:re._compile
+        - 'Show more(?:\s+comments)?'
+        - 32
+    - label: !!python/object/apply:re._compile
+        - '(?:Show more|See all)\s+replies'
+        - 32
+    - text: See more
+  comments_container_selector:
+    label: List of Comments
