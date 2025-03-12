@@ -1,11 +1,13 @@
-import yaml
+import argparse
 import json
-from typing import Dict, Any, Optional, List, Union
+import logging
 import sqlite3
+from contextlib import contextmanager
 from datetime import date, datetime
 from pathlib import Path
-import logging
-from contextlib import contextmanager
+from typing import Any, Dict, List, Optional, Union
+
+import yaml
 
 
 # The cls_loader and get_loader functions are slight modifications
@@ -36,6 +38,19 @@ def export_output(filepath, url, data):
     data_as_dict.update({"url": url})
     with open(filepath, 'w') as f:
         json.dump(data_as_dict, f)
+
+
+def parse_arguments() -> argparse.Namespace:
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(description="Specify a database table")
+
+    parser.add_argument(
+        "--table", "-t",
+        required=True,
+        help="The name of the database table to use"
+    )
+
+    return parser.parse_args()
 
 
 class WebArchiveDB:
