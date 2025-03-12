@@ -1,11 +1,12 @@
-import re
 import logging
+import re
+import yaml
+from contextlib import contextmanager
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Pattern, Union
-from dataclasses import dataclass
+
 from playwright.sync_api import Playwright, TimeoutError as PlaywrightTimeoutError
-from contextlib import contextmanager
-import yaml
 
 # # Configure logging
 logger = logging.getLogger(__name__)
@@ -201,19 +202,6 @@ def click_button_until_gone(page, selector: SelectorConfig, timeout: int = 10000
         raise
 
 
-def click_button(page, selector: SelectorConfig, timeout: int = 10000) -> None:
-    """Click a button once"""
-    try:
-        button = get_locator(page, selector)
-        if selector.select_option:
-            button.select_option(selector.select_option)
-        button.first.click(timeout=timeout)
-        logger.debug(f"Successfully clicked button: {selector}")
-    except Exception as e:
-        logger.error(f"Error while clicking button: {e}")
-        raise
-
-
 def scrape_comments(
         playwright: Playwright,
         url: str,
@@ -245,22 +233,10 @@ def scrape_comments(
             if config.accept_cookies_selector:
                 logger.info('Accepting cookies')
                 click_button_until_gone(page, config.accept_cookies_selector)
-            if config.comments_order_selector is True:
-                # Reorder first
-                logger.info('Reordering comments')
-                click_button(page, config.comments_order_selector)
-                # Then expose initial comments
-                if config.expose_initial_comments_selector:
-                    logger.info('Exposing initial comments')
-                    click_button_until_gone(page, config.expose_initial_comments_selector)
-            else:
-                # Expose initial comments first
-                if config.expose_initial_comments_selector:
-                    logger.info('Exposing initial comments')
-                    click_button_until_gone(page, config.expose_initial_comments_selector)
-                # Then reorder
-                logger.info('Reordering comments')
-                click_button(page, config.comments_order_selector)
+
+            if config.expose_initial_comments_selector:
+                logger.info('Exposing initial comments')
+                click_button_until_gone(page, config.expose_initial_comments_selector)
 
             # Click all configured "more" buttons
             if config.more_comments_selectors:
