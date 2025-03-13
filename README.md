@@ -40,9 +40,14 @@ Currently, DeepImpact is in an early stage and scrapes data from a limited set o
 
 ## Database Structure
 
-The project uses an SQLite database located at `db/database.db`, created using the `Create initial database.ipynb` notebook. The database contains several tables, each corresponding to news articles related to a specific scientific topic (e.g., BBC News articles about the Cassini space probe).
+The project uses an SQLite database located at `db/database.db`, created 
+using the `create_initial_database.ipynb` notebook. The database contains 
+several tables, each corresponding to news articles related to a 
+specific scientific topic (e.g., BBC News articles about the Cassini space probe).
 
-Each table includes URLs to relevant news articles and their associated metadata. After running the scraping process, file paths to the scraped HTML and processed comments are automatically added to the tables.
+Each table includes URLs to relevant news articles and their associated metadata. 
+After running the scraping process, file paths to the scraped HTML and processed 
+comments are automatically added to the tables.
 
 ## Usage
 
@@ -79,7 +84,7 @@ DeepImpact/
 │   └── database.db             # SQLite database with website URLs
 ├── scraped_html/               # Raw HTML files from websites
 ├── processed_comments/         # Extracted comments after LLM processing
-├── Create initial database.ipynb  # Notebook for database creation
+├── create_initial_database.ipynb  # Notebook for database creation
 ├── scrape_html.py              # Script for HTML scraping
 ├── parse_html.py               # Script for LLM-based HTML parsing
 └── requirements.txt            # Required Python packages
@@ -87,4 +92,6 @@ DeepImpact/
 
 ## References
 <a id="references"></a>
-[1] White, C.D., Phillips, A. and Sajonia-Coburgo-Gotha, B. (2022) 'Retrospectively evidencing research impact using online data mining'. Research for All, 6 (1), 7, 1–17. DOI: https://doi.org/10.14324/RFA.06.1.07.
+[1] White, C.D., Phillips, A. and Sajonia-Coburgo-Gotha, B. (2022) 
+'Retrospectively evidencing research impact using online data mining'. 
+Research for All, 6 (1), 7, 1–17. DOI: https://doi.org/10.14324/RFA.06.1.07.
