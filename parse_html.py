@@ -100,6 +100,18 @@ def get_graph_config() -> Dict[str, Any]:
 
     Centralizes configuration to make it easier to modify.
     """
+    # Could use
+    # return {
+    #     "llm": {
+    #         "model": "ollama/deepseek-r1:1.5b",
+    #         "temperature": 0,
+    #         "format": "json",  # Ollama needs the format to be specified explicitly
+    #         "model_tokens": 2000,  # depending on the model set context length
+    #         "base_url": "http://localhost:11434",
+    #         # set ollama URL of the local host (YOU CAN CHANGE IT, if you have a different endpoint)
+    #     },
+    #     "verbose": True,
+    # }
     return {
         "llm": {
             "api_key": OPENAI_API_KEY,
