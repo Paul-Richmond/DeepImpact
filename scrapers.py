@@ -21,10 +21,12 @@ if not logger.handlers:
 @dataclass
 class SelectorConfig:
     """Configuration for a single selector with various possible types"""
-    selector_type: str  # 'label', 'role', 'text', 'test_id', 'id'
+    selector_type: str  # 'label', 'role', 'text', 'test_id', 'id', 'iframe'
     value: Union[str, Pattern]  # Can be either string or compiled regex pattern
-    role_name: Optional[Union[str, Pattern]] = None  # Only used when selector_type is 'role'
+    role_name: Optional[Union[str, Pattern]] = None  # Used when selector_type is 'role'
     select_option: Optional[str] = None
+    iframe_title: Optional[str] = None  # Used when targeting elements inside iframes
+    iframe_selector_type: Optional[str] = None  # The type of selector to use within the iframe
 
 
 @dataclass
@@ -69,7 +71,15 @@ def convert_selector_config(selector_dict: Dict[str, Any]) -> SelectorConfig:
     Returns:
         SelectorConfig object
     """
-    if 'role' in selector_dict:
+    if 'iframe' in selector_dict:
+        return SelectorConfig(
+            selector_type='iframe',
+            value=selector_dict.get('value'),
+            role_name=selector_dict.get('name'),
+            iframe_title=selector_dict['iframe'],
+            iframe_selector_type=selector_dict.get('iframe_selector_type', 'role')
+        )
+    elif 'role' in selector_dict:
         return SelectorConfig(
             selector_type='role',
             value=selector_dict['role'],
@@ -174,6 +184,22 @@ def browser_context(playwright: Playwright, headless: bool = False):
 def get_locator(page, selector: SelectorConfig):
     """Get a locator based on the selector configuration"""
     match selector.selector_type:
+        case 'iframe':
+            # First get the iframe
+            # iframe = page.frame_locator(f"iframe[title=\"{selector.iframe_title}\"]")
+            iframe = page.locator(f"iframe[title=\"{selector.iframe_title}\"]").content_frame
+            # Then get the element within the iframe using the appropriate selector type
+            match selector.iframe_selector_type:
+                case 'role':
+                    return iframe.get_by_role(selector.value, name=selector.role_name)
+                case 'text':
+                    return iframe.get_by_text(selector.value)
+                case 'label':
+                    return iframe.get_by_label(selector.value)
+                case 'test_id':
+                    return iframe.get_by_test_id(selector.value)
+                case _:
+                    raise ValueError(f"Unsupported iframe selector type: {selector.iframe_selector_type}")
         case 'label':
             return page.get_by_label(selector.value)
         case 'role':
@@ -182,6 +208,8 @@ def get_locator(page, selector: SelectorConfig):
             return page.get_by_text(selector.value)
         case 'test_id':
             return page.get_by_test_id(selector.value)
+        case 'id':
+            return page.locator(selector.value)
         case _:
             raise ValueError(f"Unsupported selector type: {selector.selector_type}")
 
