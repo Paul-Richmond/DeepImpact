@@ -23,7 +23,7 @@ class SelectorConfig:
     """Configuration for a single selector with various possible types"""
     selector_type: str  # 'label', 'role', 'text', 'test_id', 'id'
     value: Union[str, Pattern]  # Can be either string or compiled regex pattern
-    role_name: Optional[str] = None  # Only used when selector_type is 'role'
+    role_name: Optional[Union[str, Pattern]] = None  # Only used when selector_type is 'role'
     select_option: Optional[str] = None
 
 
@@ -186,17 +186,22 @@ def get_locator(page, selector: SelectorConfig):
             raise ValueError(f"Unsupported selector type: {selector.selector_type}")
 
 
-def click_button_until_gone(page, selector: SelectorConfig, timeout: int = 10000) -> None:
-    """Click a button repeatedly until it's no longer available"""
+def click_button_until_gone(page, selector: SelectorConfig, timeout: int = 5000, max_clicks: int = 200) -> None:
+    """Click a button repeatedly until it's no longer available or max_clicks is reached"""
     try:
-        while True:
+        click_count = 0
+        while click_count < max_clicks:
             try:
                 button = get_locator(page, selector)
                 button.first.click(timeout=timeout)
-                logger.debug(f"Successfully clicked button: {selector}")
+                click_count += 1
+                logger.debug(f"Successfully clicked button: {selector} (click {click_count}/{max_clicks})")
             except PlaywrightTimeoutError:
                 logger.debug(f"Button no longer available: {selector}")
                 break
+        if click_count >= max_clicks:
+            logger.info(f"Reached maximum number of clicks ({max_clicks}) for selector: {selector}")
+            logger.warning(f"All comments may not have been loaded for: {selector}")
     except Exception as e:
         logger.error(f"Error while clicking button: {e}")
         raise
