@@ -1,4 +1,3 @@
-import argparse
 import logging
 import sqlite3
 from contextlib import contextmanager
@@ -6,18 +5,7 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
-
-def parse_arguments() -> argparse.Namespace:
-    """Parse command line arguments."""
-    parser = argparse.ArgumentParser(description="Specify a database table")
-
-    parser.add_argument(
-        "--table", "-t",
-        required=True,
-        help="The name of the database table to use"
-    )
-
-    return parser.parse_args()
+logger = logging.getLogger(__name__)
 
 
 class WebArchiveDB:
@@ -30,28 +18,17 @@ class WebArchiveDB:
     def __init__(
             self,
             db_path: Union[str, Path] = "db/web_archive.db",
-            db_table_name: str = "web_archive",
-            log_level: int = logging.INFO
+            db_table_name: str = "web_archive"
     ):
         """Initialize the WebArchiveDB.
 
         Args:
             db_path: Path to the SQLite database file
             db_table_name: Name of the table to store web archive data
-            log_level: Logging level for the database operations
         """
         self.db_path = Path(db_path)
         self.db_table_name = self._validate_table_name(db_table_name)
         self.name = Path(db_path).stem
-
-        # Set up logging
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(log_level)
-        if not self.logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-            handler.setFormatter(formatter)
-            self.logger.addHandler(handler)
 
         # Register adapters and converters
         sqlite3.register_adapter(date, self._adapt_date_iso)
@@ -71,7 +48,7 @@ class WebArchiveDB:
             self.conn.row_factory = sqlite3.Row
             self.cursor = self.conn.cursor()
         except sqlite3.Error as e:
-            self.logger.error(f"Failed to initialize database connection: {e}")
+            logger.error(f"Failed to initialize database connection: {e}")
             raise
 
     @staticmethod
@@ -112,7 +89,7 @@ class WebArchiveDB:
             self.cursor.execute("COMMIT")
         except Exception as e:
             self.cursor.execute("ROLLBACK")
-            self.logger.error(f"Transaction failed, rolling back: {e}")
+            logger.error(f"Transaction failed, rolling back: {e}")
             raise
 
     def setup_database(self) -> bool:
@@ -140,10 +117,10 @@ class WebArchiveDB:
                 self.cursor.execute(
                     f"CREATE INDEX IF NOT EXISTS idx_{self.db_table_name}_site ON {self.db_table_name}(site)")
 
-            self.logger.info(f"Database table {self.db_table_name} initialized successfully")
+            logger.info(f"Database table {self.db_table_name} initialized successfully")
             return True
         except sqlite3.Error as e:
-            self.logger.error(f"Failed to setup database: {e}")
+            logger.error(f"Failed to setup database: {e}")
             raise
 
     def add_scrape_file_and_time(self, filename: str, url_id: int) -> bool:
@@ -168,13 +145,13 @@ class WebArchiveDB:
                 """, (date.today(), filename, url_id))
 
                 if self.cursor.rowcount == 0:
-                    self.logger.warning(f"No record found for URL ID {url_id}")
+                    logger.warning(f"No record found for URL ID {url_id}")
                     return False
 
-            self.logger.debug(f"Successfully updated scrape info for URL ID {url_id}")
+            logger.debug(f"Successfully updated scrape info for URL ID {url_id}")
             return True
         except sqlite3.Error as e:
-            self.logger.error(f"Failed to update scrape file and time: {e}")
+            logger.error(f"Failed to update scrape file and time: {e}")
             raise
 
     def execute_query(self, sql: str, params: Optional[tuple] = None) -> List[sqlite3.Row]:
@@ -192,7 +169,7 @@ class WebArchiveDB:
                 self.cursor.execute(sql, params or ())
                 return self.cursor.fetchall()
         except sqlite3.Error as e:
-            self.logger.error(f"Query execution failed: {e}")
+            logger.error(f"Query execution failed: {e}")
             raise
 
     def add_to_database(self, data: Dict[str, Any]) -> int:
@@ -225,14 +202,14 @@ class WebArchiveDB:
                 )
 
                 new_id = self.cursor.lastrowid
-                self.logger.info(f"Successfully added new record with ID {new_id}")
+                logger.info(f"Successfully added new record with ID {new_id}")
                 return new_id
 
         except sqlite3.IntegrityError as e:
-            self.logger.error(f"Integrity error while adding record: {e}")
+            logger.error(f"Integrity error while adding record: {e}")
             raise
         except sqlite3.Error as e:
-            self.logger.error(f"Database error while adding record: {e}")
+            logger.error(f"Database error while adding record: {e}")
             raise
 
     def get_by_url(self, url: str) -> Optional[sqlite3.Row]:
@@ -251,7 +228,7 @@ class WebArchiveDB:
             )
             return self.cursor.fetchone()
         except sqlite3.Error as e:
-            self.logger.error(f"Failed to retrieve record by URL: {e}")
+            logger.error(f"Failed to retrieve record by URL: {e}")
             raise
 
     def __enter__(self):
