@@ -14,7 +14,10 @@ if __name__ == "__main__":
                 {'table_name': 'guardian_cassini', 'rows': '1'},
                 {'table_name': 'dm_cassini', 'rows': '1,21,29,32,52,63,73,83,94,114,135,146'},
                 {'table_name': 'dm_proxima_b', 'rows': '1,12,24'},
-                {'table_name': 'bbc_cassini', 'rows': '1'}]
+                {'table_name': 'bbc_cassini', 'rows': '1'},
+                {'table_name': 'bbc_dark_e_m', 'rows': '1'},
+                {'table_name': 'guardian_dark_e_m', 'rows': '1'},
+                {'table_name': 'dm_e_m', 'rows': '1'}]
 
     for data in testdata:
         # Setup database connection
