@@ -38,7 +38,7 @@ class SiteConfig:
     # site_code: str
     switch_to_frame_selector: Optional[SelectorConfig] = None
     accept_cookies_selector: Optional[SelectorConfig] = None
-    comments_order_selector: Optional[SelectorConfig] = None
+    comments_order_selectors: Optional[List[SelectorConfig]] = None
     expose_initial_comments_selector: Optional[SelectorConfig] = None
     page_buttons_selector: Optional[SelectorConfig] = None
     more_comments_selectors: Optional[List[SelectorConfig]] = None
@@ -166,9 +166,9 @@ def load_site_config(yaml_path: str, config_name: str) -> SiteConfig:
             convert_selector_config(config['accept_cookies_selector'])
             if 'accept_cookies_selector' in config else None
         ),
-        'comments_order_selector': (
-            convert_selector_config(config['comments_order_selector'])
-            if 'comments_order_selector' in config else None
+        'comments_order_selectors': (
+            [convert_selector_config(selector) for selector in config['comments_order_selectors']]
+            if 'comments_order_selectors' in config else None
         ),
         'expose_initial_comments_selector': (
             convert_selector_config(config['expose_initial_comments_selector'])
@@ -225,6 +225,15 @@ def get_locator(page, selector: SelectorConfig):
             raise ValueError(f"Unsupported selector type: {selector.selector_type}")
 
 
+def get_iframe(page, selector: SelectorConfig):
+    """Get an iframe based on the selector configuration"""
+    match selector.selector_type:
+        case 'iframe':
+            return page.frame_locator(f"iframe[title=\"{selector.value}\"]")
+        case _:
+            raise ValueError(f"Unsupported selector type: {selector.selector_type}")
+
+
 def click_button_until_gone(page, selector: SelectorConfig, timeout: int = 5000, max_clicks: int = 200) -> None:
     """Click a button repeatedly until it's no longer available or max_clicks is reached"""
     try:
@@ -232,6 +241,7 @@ def click_button_until_gone(page, selector: SelectorConfig, timeout: int = 5000,
         while click_count < max_clicks:
             try:
                 button = get_locator(page, selector)
+                # button.scroll_into_view_if_needed()
                 button.first.click(timeout=timeout)
                 click_count += 1
                 logger.debug(f"Successfully clicked button: {selector} (click {click_count}/{max_clicks})")
@@ -241,6 +251,19 @@ def click_button_until_gone(page, selector: SelectorConfig, timeout: int = 5000,
         if click_count >= max_clicks:
             logger.info(f"Reached maximum number of clicks ({max_clicks}) for selector: {selector}")
             logger.warning(f"All comments may not have been loaded for: {selector}")
+    except Exception as e:
+        logger.error(f"Error while clicking button: {e}")
+        raise
+
+
+def click_button(page, selector: SelectorConfig, timeout: int = 5000) -> None:
+    try:
+        button = get_locator(page, selector)
+        button.scroll_into_view_if_needed()
+        button.first.click(timeout=timeout)
+        logger.debug(f"Successfully clicked button: {selector}")
+    except PlaywrightTimeoutError:
+        logger.debug(f"Button no longer available: {selector}")
     except Exception as e:
         logger.error(f"Error while clicking button: {e}")
         raise
@@ -347,8 +370,9 @@ class GuardianScraper(BaseScraper):
                 page.goto(url)
                 html_content = []
 
+                # Handle switch to frame which contain cookie consent button
                 if self.config.switch_to_frame_selector:
-                    iframe = page.frame_locator(f"iframe[title=\"{self.config.switch_to_frame_selector.value}\"]")
+                    iframe = get_iframe(page, self.config.switch_to_frame_selector)
                 else:
                     iframe = None
 
@@ -361,31 +385,29 @@ class GuardianScraper(BaseScraper):
                         click_button_until_gone(page, self.config.accept_cookies_selector)
 
                 # Guardian-specific comment navigation
-                page.get_by_role("heading", name=re.compile("Comments")).scroll_into_view_if_needed()
-                page.get_by_role("button", name="Collapsed").click()
-                page.get_by_role("button", name="Unthreaded").click()
-                page.get_by_role("button", name="25").click()
-                page.get_by_role("button", name="100").click()
+                # page.get_by_role("heading", name=re.compile("Comments")).scroll_into_view_if_needed()
+                if self.config.comments_order_selectors:
+                    for selector in self.config.comments_order_selectors:
+                        click_button(page, selector)
 
                 # Handle pagination
-                if self.config.page_buttons_selector:
-                    logger.info('Processing pagination')
-                    page_num = 1
-                    while max_pages is None or page_num <= max_pages:
-                        try:
-                            logger.info(f'Accessing page {page_num}')
-                            page.get_by_role("button", name=str(page_num), exact=True).first.click(timeout=10000)
+                logger.info('Processing pagination')
+                page_num = 1
+                while max_pages is None or page_num <= max_pages:
+                    try:
+                        logger.info(f'Accessing page {page_num}')
+                        page.get_by_role("button", name=str(page_num), exact=True).first.click(timeout=10000)
 
-                            # Load more comments on new page
-                            if self.config.more_comments_selectors:
-                                for selector in self.config.more_comments_selectors:
-                                    click_button_until_gone(page, selector)
+                        # Load more comments on new page
+                        if self.config.more_comments_selectors:
+                            for selector in self.config.more_comments_selectors:
+                                click_button_until_gone(page, selector)
 
-                            html_content.append(self.config.get_container_html(page))
-                            page_num += 1
-                        except PlaywrightTimeoutError:
-                            logger.info('Reached last page')
-                            break
+                        html_content.append(self.config.get_container_html(page))
+                        page_num += 1
+                    except PlaywrightTimeoutError:
+                        logger.info('Reached last page')
+                        break
 
         except Exception as e:
             logger.error(f"Error during scraping: {e}")

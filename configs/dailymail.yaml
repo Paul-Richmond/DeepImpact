@@ -1,61 +1,22 @@
-dm_cfg1:
-  accept_cookies_selector:
-    name: Accept
-    role: button
-  reorder_comments_first: true
-  comments_order_selector:
-    name: Oldest
-    role: button
-  page_buttons_selector:
-    id: li
-  more_comments_selectors:
-  - label: !!python/object/apply:re._compile
-    - 'Show more(?:\s+comments)?'
-    - 32
-  - label: !!python/object/apply:re._compile
-    - '(?:Show more|See all)\s+replies'
-    - 32
-  - text: See more
-  comments_container_selector:
-    id: '#reader-comments'
-
-
-dm_cfg2:
-  accept_cookies_selector:
-    name: Accept
-    role: button
-  reorder_comments_first: true
-  comments_order_selector:
-    name: Oldest
-    role: button
-  page_buttons_selector:
-    id: li
-  more_comments_selectors:
-    - label: !!python/object/apply:re._compile
-        - 'Show more(?:\s+comments)?'
-        - 32
-    - label: !!python/object/apply:re._compile
-        - '(?:Show more|See all)\s+replies'
-        - 32
-    - text: See more
-  comments_container_selector:
-    label: List of Comments
-
-
 dm_cfg0:
   accept_cookies_selector:
     name: Accept
     role: button
-  reorder_comments_first: true
-  comments_order_selector:
-    name: Oldest
-    role: button
   expose_initial_comments_selector:
     name: View all
     role: button
-  page_buttons_selector:
-    id: li
   more_comments_selectors:
-    - text: See all replies
+    - role: button
+      name: !!python/object/apply:re._compile
+      - Show More Comments
+      - 34 # 34 means use re.IGNORECASE
+    - role: button
+      name: !!python/object/apply:re._compile
+      - 'View\s+\d+\s(?:reply|replies)'
+      - 34
+    - role: button
+      name: !!python/object/apply:re._compile
+      - 'See more'
+      - 34
   comments_container_selector:
     id: '#reader-comments'

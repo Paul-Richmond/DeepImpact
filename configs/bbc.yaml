@@ -1,16 +1,16 @@
 bbc_cfg0:
+  accept_cookies_selector:
+    test_id: accept-button
   expose_initial_comments_selector:
     label: !!python/object/apply:re._compile
-      - 'View Comments'
+      - 'View comments'
       - 34 # 34 means use re.IGNORECASE
-  reorder_comments_first: false
-  comments_order_selector:
-    test_id: 'select'
-    select_option: OldestFirst
   more_comments_selectors:
-  - name: More comments
-    role: button
-  - name: More replies
-    role: button
+  - role: button
+    name: More comments
+  - role: button
+    name: !!python/object/apply:re._compile
+      - 'More replies \(\d+\)'
+      - 34
   comments_container_selector:
     test_id: 'comments-container'
