@@ -1,6 +1,6 @@
 from playwright.sync_api import sync_playwright
 
-from scrapers import load_site_config, scrape_comments, write_raw_html_to_file
+from scrapers import scrape_site_html
 from utils.io import WebArchiveDB, parse_arguments
 
 
@@ -23,10 +23,15 @@ if __name__ == "__main__":
         cfg_name = entry['scraping_config']
 
         filename = f'scraped_html/{db.db_table_name}/id_{idx}.html'
-        site_cfg = load_site_config(SITE_TO_CONFIG[site], cfg_name)
 
         with sync_playwright() as playwright:
-            html_content = scrape_comments(playwright, url, site_cfg)
+            html_content = scrape_site_html(playwright=playwright,
+                                            url=url,
+                                            site_type=site,
+                                            config_path=SITE_TO_CONFIG[site],
+                                            config_name=cfg_name,
+                                            output_path=filename,
+                                            headless=False
+                                            )
 
-        write_raw_html_to_file(html_content, filename)
         db.add_scrape_file_and_time(filename, idx)
