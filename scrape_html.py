@@ -1,26 +1,12 @@
-import argparse
-
 from playwright.sync_api import sync_playwright
 
 from scrapers import scrape_comments_html
 from scrapers.database import WebArchiveDB
+from scrapers.utils import parse_arguments
 
 SITE_TO_CONFIG = {"Daily Mail": "./configs/dailymail.yaml",
                   "The Guardian": "./configs/guardian.yaml",
                   "BBC": "./configs/bbc.yaml"}
-
-
-def parse_arguments() -> argparse.Namespace:
-    """Parse command line arguments."""
-    parser = argparse.ArgumentParser(description="Specify a database table")
-
-    parser.add_argument(
-        "--table", "-t",
-        required=True,
-        help="The name of the database table to use"
-    )
-
-    return parser.parse_args()
 
 
 if __name__ == "__main__":

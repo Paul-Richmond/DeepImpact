@@ -1,3 +1,4 @@
+import argparse
 import logging
 from contextlib import contextmanager
 from pathlib import Path
@@ -9,6 +10,21 @@ from .config import SelectorConfig
 
 logger = logging.getLogger(__name__)
 
+###########################
+# Argument Parsing
+###########################
+
+def parse_arguments() -> argparse.Namespace:
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(description="Specify a database table")
+
+    parser.add_argument(
+        "--table", "-t",
+        required=True,
+        help="The name of the database table to use"
+    )
+
+    return parser.parse_args()
 
 ###########################
 # Browser Interaction Utils
