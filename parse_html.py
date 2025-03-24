@@ -5,11 +5,10 @@ from pathlib import Path
 from typing import Any, Dict
 
 from dotenv import load_dotenv
-
 from scrapegraphai.graphs import SmartScraperGraph
+
 from scrapers.database import WebArchiveDB
 from scrapers.utils import parse_arguments
-
 
 # Load environment variables once at module level
 load_dotenv()
@@ -17,21 +16,7 @@ OPENAI_API_KEY = os.getenv("OPENAIKEY")
 if not OPENAI_API_KEY:
     raise EnvironmentError("OPENAIKEY environment variable not found. Please set it in your .env file.")
 
-
-# Configure logging
-def setup_logger() -> logging.Logger:
-    """Set up and return configured logger."""
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.INFO)
-    if not logger.handlers:
-        handler = logging.StreamHandler()
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-    return logger
-
-
-logger = setup_logger()
+logger = logging.getLogger(__name__)
 
 
 def write_results_to_file(result: Dict[str, Any], filename: str) -> None:
@@ -123,30 +108,53 @@ def get_graph_config() -> Dict[str, Any]:
     }
 
 
-def get_scraping_prompt() -> str:
-    """Return the prompt for the SmartScraperGraph."""
-    return """You are an expert in Web Scraping, 
-    so you are capable of extracting information from HTML and labelling it accordingly.
+def get_scraping_prompt(site_type: str) -> str:
+    """
+    Return the prompt for the SmartScraperGraph based on the site type.
+
+    Args:
+        site_type: The type of website (e.g., 'The Guardian', 'BBC', 'Daily Mail')
+
+    Returns:
+        String containing the prompt for the specific site
+    """
+    # Base prompt common to all sites
+    base_prompt =  """You are an expert in Web Scraping capable of extracting information from HTML and labelling it accordingly.
     Within the HTML are comments posted by readers of a news article. 
     From the HTML extract the following information for each posted comment:
     the readers' user name, the content of the comment and any information regarding the comment 
     such as the date and time it was posted, how many likes or dislikes the post has etc.
     """
 
+    # Site-specific prompts
+    prompts = {
+        "The Guardian": f"""{base_prompt}""",
 
-def extract_comments_from_html(html_content: str, config: Dict[str, Any]) -> Dict[str, Any]:
+        "Daily Mail": f"""{base_prompt}""",
+
+        "BBC": f"""{base_prompt}""",
+    }
+
+    # Return site-specific prompt if available, otherwise return default prompt
+    return prompts.get(site_type, base_prompt)
+
+
+def extract_comments_from_html(html_content: str, config: Dict[str, Any], site_type: str) -> Dict[str, Any]:
     """
     Extract comment information from HTML using SmartScraperGraph.
 
     Args:
         html_content: HTML content to process
         config: Configuration for the SmartScraperGraph
+        site_type: Type of website for customized prompting
 
     Returns:
         Extracted comment data
     """
+    prompt = get_scraping_prompt(site_type)
+
     smart_scraper_graph = SmartScraperGraph(
-        prompt=get_scraping_prompt(),
+        prompt=prompt,
         source=html_content,
         config=config
     )
@@ -163,6 +171,7 @@ if __name__ == "__main__":
 
     for entry in db_entries:
         idx = entry['id']
+        site = entry['site']
         input_html_path = entry['html_file']
         output_json_path = f'processed_comments/{db.db_table_name}/id_{idx}.json'
 
@@ -172,8 +181,12 @@ if __name__ == "__main__":
 
         # Extract comments
         config = get_graph_config()
-        result = extract_comments_from_html(html_content, config)
+        result = extract_comments_from_html(html_content, config, site)
         logger.info("Successfully extracted comments from HTML")
+
+        # Add the llm configuration used
+        config["llm"].pop("api_key", None)
+        result.update({"llm": config["llm"]})
 
         # Write results
         write_results_to_file(result, output_json_path)
