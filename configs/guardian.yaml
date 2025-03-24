@@ -35,4 +35,4 @@ guardian_cfg0:
         - 'Show (\d+) more repl(?:y|ies)'
         - 34
   comments_container_selector:
-    id: "#comments"
+    test_id: "comments-column"
