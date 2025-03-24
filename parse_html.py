@@ -7,7 +7,8 @@ from typing import Any, Dict
 from dotenv import load_dotenv
 
 from scrapegraphai.graphs import SmartScraperGraph
-from utils.io import WebArchiveDB, parse_arguments
+from scrapers.database import WebArchiveDB
+from scrapers.utils import parse_arguments
 
 
 # Load environment variables once at module level
