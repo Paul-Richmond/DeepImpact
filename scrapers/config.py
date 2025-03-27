@@ -1,3 +1,24 @@
+"""
+Configuration Module for the News Scraper.
+
+This module is designed to handle all aspects of configuration management required for the news scraper. 
+It provides classes and utility functions to define, validate, and manage configurations that control the scraper's behavior.
+
+Capabilities include:
+1. Defining and storing selectors for targeting specific website elements (e.g., cookie buttons, comment sections).
+2. Loading configuration data from YAML files and converting them into Python data models.
+3. Validating the structure and completeness of the configuration data.
+4. Supporting regex-based and Playwright-compatible selectors for dynamic web scraping needs.
+5. Handling configuration formats that improve compatibility and maintainability.
+
+Components:
+- SelectorConfig: A data model for specifying individual web element selectors, including Playwright-specific types.
+- SiteConfig: A data model for organizing all selectors associated with a specific website.
+- Utility Functions: Tools for loading configurations from YAML and converting them into Python objects.
+
+This module ensures the scraper operates efficiently with well-defined configurations tailored to various website structures.
+"""
+
 import logging
 import re
 from dataclasses import dataclass
@@ -17,8 +38,17 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class SelectorConfig:
-    """Configuration for a single selector with various possible types"""
-    selector_type: str  # 'label', 'role', 'text', 'test_id', 'id', 'iframe'
+    """
+    Configuration for a single selector used to identify elements on a webpage.
+
+    Attributes:
+       selector_type: Type of selector, most match Playwright locator.get_by_# method (e.g., 'role' for get_by_role)
+       value: The selector value/expression
+       role_name: Name attribute when using role selectors
+       select_option: Option value for selection elements
+    """
+
+    selector_type: str  # 'iframe', 'role', 'label', 'placeholder', 'text', 'alt_text', 'title', 'test_id', 'id'
     value: Union[str, Pattern]  # Can be either string or compiled regex pattern
     role_name: Optional[Union[str, Pattern]] = None  # Used when selector_type is 'role'
     select_option: Optional[str] = None
@@ -26,8 +56,19 @@ class SelectorConfig:
 
 @dataclass
 class SiteConfig:
-    """Configuration for each news site's comment section"""
-    # site_code: str
+    """
+       Configuration for website selectors used during scraping.
+
+       Attributes:
+           switch_to_frame_selector: Selector for iframes containing elements (e.g., cookie dialogs)
+           accept_cookies_selector: Selector for cookie consent button
+           comments_order_selectors: Selectors for comment ordering options
+           expose_initial_comments_selector: Selector to expand initial comments
+           page_buttons_selector: Selector for pagination buttons
+           more_comments_selectors: Selectors for buttons that expose more comments or text (e.g., "Show more")
+           comments_container_selector: Selector for the container which holds all comments and other data e.g., usernames, likes, etc.
+       """
+
     switch_to_frame_selector: Optional[SelectorConfig] = None
     accept_cookies_selector: Optional[SelectorConfig] = None
     comments_order_selectors: Optional[List[SelectorConfig]] = None
@@ -78,6 +119,9 @@ def convert_selector_config(selector_dict: Dict[str, Any]) -> SelectorConfig:
 
     Returns:
         SelectorConfig object
+
+    Raises:
+        ValueError: If an unknown key is found in selector_dict
     """
     if 'iframe' in selector_dict:
         return SelectorConfig(
@@ -158,6 +202,7 @@ def load_site_config(yaml_path: str, config_name: str) -> SiteConfig:
     config = yaml_config[config_name]
 
     # Convert each selector configuration
+    # each key of `site_config_dict` should match a SiteConfig attribute
     site_config_dict = {
         'switch_to_frame_selector': (
             convert_selector_config(config['switch_to_frame_selector'])

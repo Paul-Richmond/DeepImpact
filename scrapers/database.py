@@ -1,3 +1,28 @@
+"""
+This module provides tools for managing and interacting with a SQLite database
+designed for web archiving purposes. The `WebArchiveDB` class simplifies database
+operations specific to web scraping, such as storing, updating, and retrieving
+metadata about scraped website content.
+
+Key Features:
+- Initialization and configuration of a SQLite database file.
+- Transaction management using a context manager.
+- Safe and efficient handling of SQL queries with parameterization.
+- Automatic setup of database tables and indexing to optimize performance.
+- Custom data type handling for seamless conversion of dates.
+
+Usage Example:
+    >>> db = WebArchiveDB()
+    >>> with db:
+    >>>     record_id = db.add_to_database({
+    >>>         "site": "example.com",
+    >>>         "url": "https://example.com",
+    >>>         "target": "example_page",
+    >>>         "scraping_config": "{}"
+    >>>     })
+    >>>     print(f"Record added with ID: {record_id}")
+"""
+
 import logging
 import sqlite3
 from contextlib import contextmanager
@@ -9,17 +34,43 @@ logger = logging.getLogger(__name__)
 
 
 class WebArchiveDB:
-    """A class to manage a SQLite database for web archive operations.
-
-    This class provides functionality to store and manage web scraping data,
-    including URLs, scraping configurations, and archived HTML files.
+    """A class for managing a SQLite database tailored to web archiving.
+    
+    The `WebArchiveDB` class handles operations such as creating database tables,
+    inserting records, updating scraping metadata, and retrieving information
+    about archived websites. It provides an object-oriented interface for interacting
+    with the database while handling common tasks such as transaction management,
+    date conversions, and table creation.
+    
+    Key Features:
+    - Initialize and configure a SQLite database automatically.
+    - Sanitize table names to prevent SQL injection risks.
+    - Provide developer-friendly utilities for handling dates and SQL queries.
+    - Offer robust error handling with detailed logging.
+    - Support a context manager interface for handling the lifecycle of database connections.
+    
+    Example Usage:
+        db = WebArchiveDB("web_data.db")
+    
+        # Inserting a new record
+        with db:
+            db.add_to_database({
+                "site": "example.com",
+                "url": "https://example.com",
+                "target": "homepage",
+                "scraping_config": '{"depth": 2, "type": "full"}'
+            })
+    
+        # Fetching a record by URL
+        with db:
+            record = db.get_by_url("https://example.com")
+            print(record["site"])  # Outputs: example.com
     """
 
-    def __init__(
-            self,
-            db_path: Union[str, Path] = "db/web_archive.db",
-            db_table_name: str = "web_archive"
-    ):
+    def __init__(self,
+                 db_path: Union[str, Path] = "db/web_archive.db",
+                 db_table_name: str = "web_archive"
+                 ) -> None:
         """Initialize the WebArchiveDB.
 
         Args:
@@ -38,7 +89,17 @@ class WebArchiveDB:
         self.setup_database()
 
     def _initialize_connection(self) -> None:
-        """Initialize the database connection with proper settings."""
+        """Establish a connection to the SQLite database.
+        
+        This method sets up a connection to the SQLite database file specified in `db_path`.
+        It enables autocommit mode, configures the connection to parse declared types,
+        and sets the row factory to `sqlite3.Row` for dictionary-style access to query results.
+        
+        The method also initializes a cursor for executing database operations.
+        
+        Raises:
+            sqlite3.Error: If the connection to the database fails.
+        """
         try:
             self.conn = sqlite3.connect(
                 self.db_path,
@@ -124,14 +185,22 @@ class WebArchiveDB:
             raise
 
     def add_scrape_file_and_time(self, filename: str, url_id: int) -> bool:
-        """Update the scrape file and timestamp for a given URL.
-
+        """Update the scraping metadata (file name and timestamp) for a specific URL.
+        
+        This method updates the following fields in the database:
+        - `last_scraped`: The date when the URL was last scraped.
+        - `times_scraped`: Increments the count of how many times the URL has been scraped.
+        - `html_file`: The name of the file where the scraped content is saved.
+        
         Args:
-            filename: Name of the HTML file where the scraped content is stored
-            url_id: ID of the URL record to update
-
+            filename (str): Name of the HTML file that contains the scraped content.
+            url_id (int): The unique ID of the URL record to update.
+        
         Returns:
-            bool: True if update was successful
+            bool: True if the update was successful, otherwise False if no matching record was found.
+        
+        Raises:
+            sqlite3.Error: If any database-related error occurs during the operation.
         """
         try:
             with self.transaction():
@@ -155,14 +224,22 @@ class WebArchiveDB:
             raise
 
     def execute_query(self, sql: str, params: Optional[tuple] = None) -> List[sqlite3.Row]:
-        """Execute a SQL query with parameters.
-
+        """Execute a SQL query with optional parameters and return the results.
+        
+        This method runs a given SQL query against the database and fetches all matching
+        rows. It uses parameterized queries to prevent SQL injection attacks.
+        
         Args:
-            sql: SQL query string
-            params: Query parameters
-
+            sql (str): The SQL query string to execute.
+            params (Optional[tuple]): A tuple of parameters to safely substitute into
+                                      the query. Defaults to None.
+        
         Returns:
-            List of query results as Row objects
+            List[sqlite3.Row]: A list of results represented as sqlite3.Row objects.
+                               Each row can be accessed like a dictionary.
+        
+        Raises:
+            sqlite3.Error: If an error occurs while executing the query.
         """
         try:
             with self.transaction():
@@ -213,13 +290,20 @@ class WebArchiveDB:
             raise
 
     def get_by_url(self, url: str) -> Optional[sqlite3.Row]:
-        """Retrieve a record by its URL.
-
+        """Retrieve a database record associated with a specific URL.
+        
+        This method searches for a single record in the database with a `url` value
+        matching the input and returns the corresponding row.
+        
         Args:
-            url: URL to search for
-
+            url (str): The URL to search for within the database.
+        
         Returns:
-            Optional[sqlite3.Row]: Record if found, None otherwise
+            Optional[sqlite3.Row]: A row object representing the record if found,
+                                   or None if no matching record exists.
+        
+        Raises:
+            sqlite3.Error: If an error occurs while executing the query.
         """
         try:
             self.cursor.execute(

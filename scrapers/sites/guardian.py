@@ -1,3 +1,22 @@
+"""
+Module: guardian.py
+
+This module implements a web scraper for The Guardian website using the Playwright library. 
+It defines the GuardianScraper class, which extracts content, manages cookie consents, handles 
+pagination, and navigates comments sections on Guardian web pages.
+
+The module relies on the BaseScraper class, utility functions (browser_context, click_button_until_gone, 
+get_iframe, click_button), and logging for streamlined scraping operations.
+
+Dependencies:
+- playwright: Required for browser automation and web interaction.
+- base: BaseScraper class providing common scraping functionality.
+- utils: Helper functions for browser and DOM interaction.
+
+Usage:
+Instantiate the GuardianScraper class and call the scrape() method with the desired parameters 
+to extract content from a specified Guardian web page.
+"""
 import logging
 from typing import Optional
 
@@ -11,9 +30,40 @@ logger = logging.getLogger(__name__)
 
 
 class GuardianScraper(BaseScraper):
-    """Scraper implementation for The Guardian website"""
+    """
+    GuardianScraper is a specialized implementation of the BaseScraper class tailored for extracting 
+    content from The Guardian website. This scraper handles cookie consent dialogs, navigates through 
+    comment sections, and supports paginated content extraction.
+
+    Attributes:
+        Inherits attributes from the BaseScraper class, and relies on configurations like 
+        switch_to_frame_selector, accept_cookies_selector, comments_order_selectors, 
+        and more_comments_selectors to fine-tune scraping for The Guardian.
+
+    Methods:
+        scrape(playwright, url, headless, max_pages): Extracts HTML content from a Guardian web page.
+    """
 
     def scrape(self, playwright: Playwright, url: str, headless: bool = False, max_pages: Optional[int] = None) -> str:
+        """
+        Extracts HTML content from a specified URL on The Guardian website.
+        
+        This method interacts with the page using the Playwright library to handle 
+        cookie consents, navigate through pagination, and retrieve content based on 
+        specific configurations.
+    
+        Parameters:
+            playwright (Playwright): The Playwright instance for browser control.
+            url (str): The URL of the web page to scrape.
+            headless (bool, optional): If True, runs the browser in headless mode. Defaults to False.
+            max_pages (int, optional): The maximum number of pages to scrape. If None, scrapes all pages.
+    
+        Returns:
+            str: The concatenated HTML content extracted from the specified URL.
+    
+        Raises:
+            Exception: If any error occurs during the scraping process.
+        """
         logger.info(f'Starting Guardian web scraping for URL: {url}')
 
         try:
@@ -37,7 +87,6 @@ class GuardianScraper(BaseScraper):
                         click_button_until_gone(page, self.config.accept_cookies_selector)
 
                 # Guardian-specific comment navigation
-                # page.get_by_role("heading", name=re.compile("Comments")).scroll_into_view_if_needed()
                 if self.config.comments_order_selectors:
                     for selector in self.config.comments_order_selectors:
                         click_button(page, selector)

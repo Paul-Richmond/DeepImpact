@@ -1,3 +1,11 @@
+"""
+This module provides a web scraper implementation for generic websites.
+
+The `DefaultScraper` class extends the `BaseScraper` and offers capabilities for automated
+web scraping tasks using Playwright. It includes handling cookies, loading additional 
+comments, and extracting HTML content from specified containers on web pages.
+"""
+
 import logging
 from typing import Optional
 
@@ -10,9 +18,31 @@ logger = logging.getLogger(__name__)
 
 
 class DefaultScraper(BaseScraper):
-    """Default scraper implementation for generic websites"""
+    """
+    Default scraper implementation for generic websites.
+
+    This scraper automates common tasks required during web scraping, such as:
+    - Handling cookie consent dialogs.
+    - Clicking "Load More" buttons to expose additional content.
+    - Extracting HTML content for further processing.
+    """
 
     def scrape(self, playwright: Playwright, url: str, headless: bool = False, max_pages: Optional[int] = None) -> str:
+        """
+        Perform web scraping on the provided URL using the Playwright browser automation framework.
+
+        Args:
+            playwright (Playwright): The Playwright instance used for browser automation.
+            url (str): The target URL of the website to scrape.
+            headless (bool, optional): Whether to run the browser in headless mode. Defaults to False.
+            max_pages (Optional[int], optional): Reserved for future iteration limit on pagination. Defaults to None.
+
+        Returns:
+            str: The combined HTML content extracted from the target website.
+
+        Raises:
+            Exception: Reraises any exception encountered during web scraping.
+        """
         logger.info(f'Starting web scraping for URL: {url}')
 
         try:
@@ -25,6 +55,7 @@ class DefaultScraper(BaseScraper):
                     logger.info('Accepting cookies')
                     click_button_until_gone(page, self.config.accept_cookies_selector)
 
+                # Click to expose comments
                 if self.config.expose_initial_comments_selector:
                     logger.info('Exposing initial comments')
                     click_button_until_gone(page, self.config.expose_initial_comments_selector)

@@ -1,3 +1,12 @@
+"""
+This module provides the functionality to scrape html containing user comments from different news sites.
+
+It includes:
+- A setup for logging.
+- A function `scrape_comments_html` that acts as the main entry point for scraping comments.
+- Dependencies for scraping: a Playwright instance, configuration loading, and scraper factories.
+"""
+
 import logging
 from typing import Optional
 
@@ -36,7 +45,7 @@ def scrape_comments_html(
         max_pages: Maximum number of pages to scrape (None for all pages)
 
     Returns:
-        str: Combined HTML content of all scraped comments
+        str: HTML content which includes all scraped comments and comment data such as usernames, timestamps, likes, etc.
     """
     # Load the configuration
     config = load_site_config(config_path, config_name)
