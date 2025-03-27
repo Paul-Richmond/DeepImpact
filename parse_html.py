@@ -12,9 +12,9 @@ from scrapers.utils import parse_arguments
 
 # Load environment variables once at module level
 load_dotenv()
-OPENAI_API_KEY = os.getenv("OPENAIKEY")
+OPENAI_API_KEY = os.getenv("OPEN_AI_KEY")
 if not OPENAI_API_KEY:
-    raise EnvironmentError("OPENAIKEY environment variable not found. Please set it in your .env file.")
+    raise EnvironmentError("OPEN_AI_KEY environment variable not found. Please set it in your .env file.")
 
 logger = logging.getLogger(__name__)
 
