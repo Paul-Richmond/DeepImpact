@@ -6,6 +6,8 @@ from typing import Any, Dict, List, Optional, Pattern, Union
 import yaml
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
+from utils import get_locator
+
 logger = logging.getLogger(__name__)
 
 
@@ -35,22 +37,31 @@ class SiteConfig:
     comments_container_selector: SelectorConfig = None
 
     def get_container_html(self, page) -> str:
-        """Get the HTML content of the comments container"""
+        """
+        Get the HTML content of the comments container
+
+        Args:
+            page: The page object to get content from
+
+        Returns:
+            str: HTML content of the container
+
+        Raises:
+            PlaywrightTimeoutError: If the container cannot be found within timeout
+            ValueError: If there's an invalid selector configuration
+            Exception: For other unexpected errors
+        """
         try:
-            match self.comments_container_selector.selector_type:
-                case 'test_id':
-                    return page.get_by_test_id(self.comments_container_selector.value).inner_html()
-                case 'label':
-                    return page.get_by_label(self.comments_container_selector.value).inner_html()
-                case 'id':
-                    return page.locator(self.comments_container_selector.value).inner_html()
-                case _:
-                    raise ValueError(f"Unsupported selector type: {self.comments_container_selector.selector_type}")
+            container = get_locator(page, self.comments_container_selector)
+            return container.inner_html()
         except PlaywrightTimeoutError as e:
             logger.error(f"Timeout while getting container HTML: {e}")
             raise
+        except ValueError as e:
+            logger.error(f"Invalid selector configuration: {e}")
+            raise
         except Exception as e:
-            logger.error(f"Error getting container HTML: {e}")
+            logger.error(f"Unexpected error while getting container HTML: {str(e)}")
             raise
 
 
