@@ -47,6 +47,7 @@ class DefaultScraper(BaseScraper):
 
         try:
             with browser_context(playwright, headless) as page:
+                playwright.selectors.set_test_id_attribute('data-testid')
                 page.goto(url)
                 html_content = []
 
