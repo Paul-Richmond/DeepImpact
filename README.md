@@ -36,7 +36,7 @@ Instructions on how to add support for new news sites are found [here](extend-we
 
 ## Features
 
-- Automated scraping of comments from news sites (BBC, The Guardian, Daily Mail)
+- Automated scraping of HTML containing comments and other data from news sites (BBC, The Guardian, Daily Mail)
 - Configurable scraping process via YAML configuration files
 - SQL database management for tracking URLs and scraped content
 - Processing pipeline to extract and analyze comment data
@@ -92,7 +92,7 @@ DeepImpact/
    ```
 2. Create and activate a conda environment:
    ```bash
-   conda env create -n DeepImpact python=3.12
+   conda create -n DeepImpact python=3.12
    conda activate DeepImpact
    ```
 3. Install required packages:
@@ -124,6 +124,25 @@ DeepImpact/
         ```
 
       > 💡 Do **not** wrap the values in quotes unless required for escaping special characters.
+
+### Optional - Installing Ollama
+
+If you want to use Ollama and a local LLM when parsing scraped HTML, you can install it as follows:
+
+1. Visit the [Ollama website](https://ollama.com) and download the installer for your operating system.
+
+2. Follow the installation guide specific to your platform.
+
+3. Once installed, verify the installation by running the following command in your terminal:
+   ```bash
+   ollama --version
+   ```
+   This should output the installed version of Ollama. If it fails, you may need to start the Ollama application.
+
+4. Download a model e.g. Llama3.2
+   ```bash
+   ollama pull llama3.2
+   ```
 
 ## Usage
 
