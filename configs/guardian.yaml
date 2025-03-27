@@ -1,26 +1,53 @@
-handler: !Cls
-  module: scrapers
-  name: Guardian
-site:
-  cookies:
-    iframe: '//iframe[@title="The Guardian consent message"]'
-    accept_button: '//button[contains(text(),"Yes")]'
+# The Guardian Website Scraping Configurations
+#
+# This configuration file contains defines selectors used by the class GuardianScraper to scrape comments
+# the Guardian website articles. It works in conjunction with the scraper implementation in
+# scrapers/sites/guardian.py and the configuration system defined in scrapers/config.py.
+#
+# The configuration is loaded via the load_site_config() function from scrapers/config.py and
+# converted to a SiteConfig object with proper selector configurations.
+#
+# For information about selector types and configuration options, see the SelectorConfig
+# class in scrapers/config.py.
+#
+# The selector names e.g. `accept_cookies_selector` must match attributes in the SiteConfig class
+# in scrapers/config.py
 
-  pages:
-    comments_column: '//div[@data-component="discussion"]'
-    page_control_element: '//div[@class="dcr-gdjgj3"]'
-    more_replies_button: '//button[@data-link-name="Show more replies"]'
-    page_forward_button: './/button[@class="dcr-sy54ny"]'
-    page_numbered_buttons: './/button' #this is the container for the numbered pages
-
-  data_container: {"name": "div", "class_": "dcr-qo6we0"}
-
-  data_selectors:
-      - {"name": "div", 'class_': "dcr-gkexou"} #this is the comment text
-      - {"name": "div", 'class_': "dcr-1atl19p"} #this is the time the comment was posted
-      - {"name": "div", 'class_': "dcr-18si932"} #this is upvote number
-
-  df_columns:
-    - 'Comment'
-    - 'Post Date'
-    - 'Likes'
+guardian_cfg0: # must match entry in database field `scraping_config`
+  switch_to_frame_selector:
+    iframe: "SP Consent Message"
+  accept_cookies_selector:
+    role: "button"
+    name: "Accept all"
+  comments_order_selectors: # this needs to be a list of selectors, see SiteConfig type hints
+    - role: heading
+      name: !!python/object/apply:re._compile
+        - "Comments"
+        - 34
+    - role: button
+      name: !!python/object/apply:re._compile
+        - "Collapsed"
+        - 34
+    - role: button
+      name: !!python/object/apply:re._compile
+        - "Unthreaded"
+        - 34
+    - role: button
+      name: !!python/object/apply:re._compile
+        - "25"
+        - 34
+    - role: button
+      name: !!python/object/apply:re._compile
+        - "100"
+        - 34
+  more_comments_selectors: # this needs to be a list of selectors, see SiteConfig type hints
+    - role: button
+      name: !!python/object/apply:re._compile
+        - "View more comments"
+        - 34
+    - role: button
+      name: !!python/object/apply:re._compile
+        - 'Show (\d+) more repl(?:y|ies)'
+        - 34
+  comments_container_selector:
+    test_id: "comments-column"

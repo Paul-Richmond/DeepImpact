@@ -1,29 +1,52 @@
-handler: !Cls
-  module: scrapers
-  name: Bbc
-site:
-  control:
-    more_comments_button: '//button[contains(text(), "More comments")]'
-    more_replies_button: '//button[contains(text(), "More repl")]'
+# BBC News Website Scraping Configurations
+#
+# This configuration file contains defines selectors used by the class DefaultScraper to scrape comments
+# from BBC website articles. It works in conjunction with the scraper implementation in
+# scrapers/sites/default.py and the configuration system defined in scrapers/config.py.
+#
+# The configuration is loaded via the load_site_config() function from scrapers/config.py and
+# converted to a SiteConfig object with proper selector configurations.
+#
+# For information about selector types and configuration options, see the SelectorConfig
+# class in scrapers/config.py.
+#
+# The selector names e.g. `accept_cookies_selector` must match attributes in the SiteConfig class
+# in scrapers/config.py
 
-  data_container: {"name": "div", "class_": "ssrcss-uchyry-CommentWrapper e126ob1s4"}
+bbc_cfg0:  # must match entry in database field `scraping_config`
+  accept_cookies_selector:
+    test_id: accept-button
+  expose_initial_comments_selector:
+    label: !!python/object/apply:re._compile
+      - 'View comments'
+      - 34 # 34 means use re.IGNORECASE
+  more_comments_selectors: # this needs to be a list of selectors, see SiteConfig type hints
+  - role: button
+    name: More comments
+  - role: button
+    name: !!python/object/apply:re._compile
+      - 'More replies \(\d+\)'
+      - 34
+  comments_container_selector:  # this is the element whose html gets grabbed
+    test_id: 'comments-container'
 
-  data_selectors:
-      - {"name": "div", "class_": "ssrcss-wplbgm-CommentBody e1qss76f0"}
-      - {"name": "h4", "class_": "ssrcss-1dg0ab2-Date eg5u43k0"}
-      - {"name": "span", "data-testid": "positive-reaction-count"}
-      - {"name": "span", "data-testid": "negative-reaction-count"}
-
-  reply: {"name": "div", "class_": "ssrcss-11z3t6j-ReplyBox etfy88f3"}
-
-  reply_selectors:
-      - {"name": "div", "class_": "ssrcss-1kq3nj-ReplyBody etfy88f4"}
-      - {"name": "h4", "class_": "ssrcss-1dg0ab2-Date eg5u43k0"}
-      - {"name": "span", "data-testid": "positive-reaction-count"}
-      - {"name": "span", "data-testid": "negative-reaction-count"}
-
-  df_columns:
-    - 'Comment'
-    - 'Post Date'
-    - 'Likes'
-    - 'Dislikes'
+# Further configurations can be added when the BBC News website changes
+#
+# For example
+#bbc_cfg1:
+#  accept_cookies_selector:
+#    role: button
+#    name: Accept Cookies
+#  expose_initial_comments_selector:
+#    label: !!python/object/apply:re._compile
+#      - 'View comments'
+#      - 34 # 34 means use re.IGNORECASE
+#  more_comments_selectors:
+#  - role: button
+#    name: More comments
+#  - role: button
+#    name: !!python/object/apply:re._compile
+#      - 'More replies \(\d+\)'
+#      - 34
+#  comments_container_selector:
+#    test_id: 'comments-container'
