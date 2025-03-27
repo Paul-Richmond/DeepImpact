@@ -1,10 +1,25 @@
-guardian_cfg0:
+# The Guardian Website Scraping Configurations
+#
+# This configuration file contains defines selectors used by the class GuardianScraper to scrape comments
+# the Guardian website articles. It works in conjunction with the scraper implementation in
+# scrapers/sites/guardian.py and the configuration system defined in scrapers/config.py.
+#
+# The configuration is loaded via the load_site_config() function from scrapers/config.py and
+# converted to a SiteConfig object with proper selector configurations.
+#
+# For information about selector types and configuration options, see the SelectorConfig
+# class in scrapers/config.py.
+#
+# The selector names e.g. `accept_cookies_selector` must match attributes in the SiteConfig class
+# in scrapers/config.py
+
+guardian_cfg0: # must match entry in database field `scraping_config`
   switch_to_frame_selector:
     iframe: "SP Consent Message"
   accept_cookies_selector:
     role: "button"
     name: "Accept all"
-  comments_order_selectors:
+  comments_order_selectors: # this needs to be a list of selectors, see SiteConfig type hints
     - role: heading
       name: !!python/object/apply:re._compile
         - "Comments"
@@ -25,7 +40,7 @@ guardian_cfg0:
       name: !!python/object/apply:re._compile
         - "100"
         - 34
-  more_comments_selectors:
+  more_comments_selectors: # this needs to be a list of selectors, see SiteConfig type hints
     - role: button
       name: !!python/object/apply:re._compile
         - "View more comments"
