@@ -27,8 +27,6 @@ from typing import Any, Dict, List, Optional, Pattern, Union
 import yaml
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
-from utils import get_locator
-
 logger = logging.getLogger(__name__)
 
 
@@ -93,6 +91,9 @@ class SiteConfig:
             Exception: For other unexpected errors
         """
         try:
+            # Use a delayed/local import to break the circular dependency
+            from .utils import get_locator
+
             container = get_locator(page, self.comments_container_selector)
             return container.inner_html()
         except PlaywrightTimeoutError as e:
