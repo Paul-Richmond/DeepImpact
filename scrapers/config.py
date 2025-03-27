@@ -94,10 +94,10 @@ def convert_selector_config(selector_dict: Dict[str, Any]) -> SelectorConfig:
             selector_type='text',
             value=selector_dict['text']
         )
-    elif 'all_text' in selector_dict:
+    elif 'alt_text' in selector_dict:
         return SelectorConfig(
-            selector_type='all_text',
-            value=selector_dict['all_text']
+            selector_type='alt_text',
+            value=selector_dict['alt_text']
         )
     elif 'title' in selector_dict:
         return SelectorConfig(
