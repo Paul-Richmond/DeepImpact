@@ -46,12 +46,18 @@ def browser_context(playwright: Playwright, headless: bool = False):
 def get_locator(page, selector: SelectorConfig):
     """Get a locator based on the selector configuration"""
     match selector.selector_type:
-        case 'label':
-            return page.get_by_label(selector.value)
         case 'role':
             return page.get_by_role(selector.value, name=selector.role_name)
+        case 'label':
+            return page.get_by_label(selector.value)
+        case 'placeholder':
+            return page.get_by_placeholder(selector.value)
         case 'text':
             return page.get_by_text(selector.value)
+        case 'alt_text':
+            return page.get_by_alt_text(selector.value)
+        case 'title':
+            return page.get_by_title(selector.value)
         case 'test_id':
             return page.get_by_test_id(selector.value)
         case 'id':
