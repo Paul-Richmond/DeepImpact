@@ -44,6 +44,11 @@ def parse_arguments() -> argparse.Namespace:
         required=True,
         help="The name of the database table to use"
     )
+    parser.add_argument(
+        "--rows", "-r",
+        required=False,
+        help="The ROWIDs of the table to use e.g. 1,2"
+    )
 
     return parser.parse_args()
 

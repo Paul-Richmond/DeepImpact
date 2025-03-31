@@ -167,7 +167,10 @@ if __name__ == "__main__":
     args = parse_arguments()
     # Setup database connection
     db = WebArchiveDB(db_path='db/database.db', db_table_name=args.table)
-    db_entries = db.execute_query(f'''SELECT * FROM {db.db_table_name}''')
+    if args.rows:
+        db_entries = db.execute_query(f'''SELECT * FROM {db.db_table_name} WHERE ROWID IN ({args.rows})''')
+    else:
+        db_entries = db.execute_query(f'''SELECT * FROM {db.db_table_name}''')
 
     for entry in db_entries:
         idx = entry['id']

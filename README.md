@@ -87,7 +87,8 @@ DeepImpact/
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/username/DeepImpact.git
+   git clone https://github.com/Paul-Richmond/DeepImpact.git
+
    cd DeepImpact
    ```
 2. Create and activate a conda environment:
@@ -188,10 +189,11 @@ Adding multiple records can be done with a simple loop over a list of URLs.
 To scrape HTML from news websites:
 
 ```bash
-python scrape_html.py --table TABLE_NAME
+python scrape_html.py --table TABLE_NAME --rows ROWIDS
 ```
 
-Where `TABLE_NAME` is the name of a table in the database. For example:
+Where `TABLE_NAME` is the required name of a table in the database and `ROWIDS` is an optional 
+list of IDs to select from the table. For example:
 
 ```bash
 python scrape_html.py --table guardian_proxima_b
@@ -199,23 +201,30 @@ python scrape_html.py --table guardian_proxima_b
 
 The script will:
 
-1. Connect to the database and retrieve URLs from the specified table
+1. Connect to the database and retrieve all URLs from the specified table
 2. Load the appropriate site configuration (BBC, Guardian, Daily Mail)
 3. Navigate to each URL and extract the HTML content with comments
 4. Save the raw HTML to the `scraped_html/{table_name}/` directory
 5. Update the database with file paths and scraping timestamps
+
+Whereas the script
+
+```bash
+python scrape_html.py --table guardian_proxima_b --rows 1,4
+```
+would only retrieve the URLs which have `ID` equal to 1 or 4.
 
 ### Step 2: Processing Comments
 
 After scraping, use the parsing script to extract and process the comments:
 
 ```bash
-python parse_html.py --table TABLE_NAME
+python parse_html.py --table TABLE_NAME --rows ROWIDS
 ```
 
 This will:
 
-- Open each HTML file path stored in the specified table
+- Open each HTML file path stored in the specified table where the IDs match `ROWIDS`
 - Use the ScrapeGraphAI package to send the HTML to a LLM for processing and extraction of comments and other relevant data
 - Save the processed comments and other data to the `processed_comments/TABLE_NAME/` directory
 
