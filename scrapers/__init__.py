@@ -25,7 +25,6 @@ def scrape_comments_html(
         playwright: Playwright,
         url: str,
         site_type: str,
-        config_path: str,
         config_name: str,
         output_path: Optional[str] = None,
         headless: bool = False,
@@ -38,7 +37,6 @@ def scrape_comments_html(
         playwright: Playwright instance
         url: Target URL to scrape
         site_type: Type of website (e.g., 'The Guardian', 'BBC', 'Daily Mail')
-        config_path: Path to the YAML configuration file
         config_name: Name of the configuration to use
         output_path: Optional path to save the HTML output
         headless: Whether to run browser in headless mode
@@ -47,11 +45,14 @@ def scrape_comments_html(
     Returns:
         str: HTML content which includes all scraped comments and comment data such as usernames, timestamps, likes, etc.
     """
+    # Get config file for site_type
+    config_path = ScraperFactory.get_config_path(site_type)
+
     # Load the configuration
-    config = load_site_config(config_path, config_name)
+    site_config = load_site_config(config_path, config_name)
 
     # Create the appropriate scraper
-    scraper = ScraperFactory.create_scraper(site_type, config)
+    scraper = ScraperFactory.create_scraper(site_type, site_config)
 
     # Perform the scraping
     html_content = scraper.scrape(playwright, url, headless, max_pages)

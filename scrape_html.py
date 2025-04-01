@@ -4,11 +4,6 @@ from scrapers import scrape_comments_html
 from scrapers.database import WebArchiveDB
 from scrapers.utils import parse_arguments
 
-SITE_TO_CONFIG = {"Daily Mail": "./configs/dailymail.yaml",
-                  "The Guardian": "./configs/guardian.yaml",
-                  "BBC": "./configs/bbc.yaml"}
-
-
 if __name__ == "__main__":
     # Parse command line arguments
     args = parse_arguments()
@@ -31,7 +26,6 @@ if __name__ == "__main__":
             html_content = scrape_comments_html(playwright=playwright,
                                                 url=url,
                                                 site_type=site,
-                                                config_path=SITE_TO_CONFIG[site],
                                                 config_name=cfg_name,
                                                 output_path=filename,
                                                 headless=False

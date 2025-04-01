@@ -52,20 +52,8 @@ Notes on selector types:
 You can use regular expressions by using the `!!python/object/apply:re._compile` syntax.
 A useful website for checking regex expressions can be found [here](https://regex101.com).
 
-### 2. Update the SITE_TO_CONFIG Mapping
 
-In `scrape_html.py`, add your website to the `SITE_TO_CONFIG` dictionary:
-
-```python
-SITE_TO_CONFIG = {
-    "Daily Mail": "./configs/dailymail.yaml",
-    "The Guardian": "./configs/guardian.yaml",
-    "BBC": "./configs/bbc.yaml",
-    "Your Site": "./configs/your-site.yaml"  # Add this line
-}
-```
-
-### 3. Create a Custom Scraper (Optional)
+### 2. Create a Custom Scraper (Optional)
 
 For most websites, the `DefaultScraper` should work fine. However, if your website 
 has unique requirements, you can create a custom scraper (e.g. see the `GuardianScraper` class):
@@ -112,7 +100,7 @@ class YourSiteScraper(BaseScraper):
         return ''.join(html_content)
 ```
 
-2. Register your custom scraper in `scrapers/factory.py`:
+2. Register your custom scraper and configuration file in `scrapers/factory.py`:
 
 ```python
 from .sites.your_site import YourSiteScraper
@@ -121,11 +109,19 @@ class ScraperFactory:
     """Factory class to create appropriate scrapers based on website"""
 
     _scrapers: Dict[str, Type[BaseScraper]] = {
-        'The Guardian': GuardianScraper,
-        'Daily Mail': DefaultScraper,
-        'BBC': DefaultScraper,
-        'Your Site': YourSiteScraper,  # Add this line
+        "The Guardian": GuardianScraper,
+        "Daily Mail": DefaultScraper,
+        "BBC": DefaultScraper,
+        "Your Site": YourSiteScraper,  # Add this line
         # Add more scrapers here as they are implemented
+    }
+
+    _site_configs: Dict[str, str] = {
+        "The Guardian": "./configs/guardian.yaml",
+        "Daily Mail": "./configs/dailymail.yaml",
+        "BBC": "./configs/bbc.yaml",
+        "Your Site": ".configs/your-site.yaml", # Add this line
+        # Add more site configurations here as they are implemented
     }
 ```
 
