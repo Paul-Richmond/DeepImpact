@@ -11,7 +11,8 @@ A tool for analyzing the societal impact of scientific discoveries through web s
 - [Usage](#usage)
     - [Database Setup](#database-setup)
     - [Step 1: Scraping News Articles](#step-1-scraping-news-articles)
-    - [Step 2: Processing Comments](#step-2-processing-comments)
+    - [Step 2: Processing Comments with ScrapeGraphAI](#step-2-processing-comments-with-scrapegraphai)
+    - [(Optional) Step 3: Processing Comments with BeautifulSoup](#optional-step-3-processing-comments-with-beautifulsoup)
 - [Configuration](#configuration)
     - [Site-Specific Configurations](#site-specific-configurations)
 - [Supported News Sites](#supported-news-sites)
@@ -214,7 +215,7 @@ python scrape_html.py --table guardian_proxima_b --rows 1,4
 ```
 would only retrieve the URLs which have `ID` equal to 1 or 4.
 
-### Step 2: Processing Comments
+### Step 2: Processing Comments with ScrapeGraphAI
 
 After scraping, use the parsing script to extract and process the comments:
 
@@ -227,6 +228,23 @@ This will:
 - Open each HTML file path stored in the specified table where the IDs match `ROWIDS`
 - Use the ScrapeGraphAI package to send the HTML to a LLM for processing and extraction of comments and other relevant data
 - Save the processed comments and other data to the `processed_comments/TABLE_NAME/` directory
+
+### (Optional) Step 3: Processing Comments with BeautifulSoup
+
+If Step 2 does not produce reliable results you can fall back to using BeautifulSoup to extract the comments:
+
+```bash
+python parse_html_bsoup.py --table TABLE_NAME --rows ROWIDS
+```
+
+This will:
+
+- Open each HTML file path stored in the specified table where the IDs match `ROWIDS`
+- Use the BeautifulSoup package and a dictionary of CSS selectors and attributes to parse the HTML. 
+- Save the processed comments and other data to the `processed_comments/TABLE_NAME/` directory
+
+> This is a proof of concept and only works for the BBC website at the moment. 
+> It will need modification for HTML extracted from other websites.
 
 ## Configuration
 

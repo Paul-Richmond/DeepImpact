@@ -6,6 +6,7 @@ from typing import Any, Dict
 
 from dotenv import load_dotenv
 from scrapegraphai.graphs import SmartScraperGraph
+from scrapegraphai.utils import prettify_exec_info
 
 from scrapers.database import WebArchiveDB
 from scrapers.utils import parse_arguments
@@ -103,6 +104,10 @@ def get_graph_config() -> Dict[str, Any]:
             "api_key": OPENAI_API_KEY,
             "model": "openai/gpt-4o-mini",
             "temperature": 0.0,
+            "timeout": 30000,
+            # "rate_limit": {"requests_per_second": 0.05,
+            #                "max_retries": 1,
+            #                },
         },
         "verbose": True,
     }
@@ -122,24 +127,25 @@ def get_scraping_prompt(site_type: str) -> str:
     base_prompt =  """You are an expert in Web Scraping capable of extracting information from HTML and labelling it accordingly.
     Within the HTML are comments posted by readers of a news article. 
     From the HTML extract the following information for each posted comment:
-    the readers' user name, the content of the comment and any information regarding the comment 
-    such as the date and time it was posted, how many likes or dislikes the post has etc.
     """
 
     # Site-specific prompts
     prompts = {
-        "The Guardian": f"""{base_prompt}""",
+        "The Guardian": f"""{base_prompt} the readers' user name, the content of the comment and any information regarding the comment 
+    such as the date and time it was posted, how many likes or dislikes the post has etc.""",
 
-        "Daily Mail": f"""{base_prompt}""",
+        "Daily Mail": f"""{base_prompt} the readers' user name, the content of the comment and any information regarding the comment 
+    such as the date and time it was posted, how many likes or dislikes the post has etc.""",
 
-        "BBC": f"""{base_prompt}""",
+        "BBC": f"""{base_prompt} the readers' user name, the date and time the comment was posted, the content of the comment and 
+        how many likes and dislikes the post has.""",
     }
 
     # Return site-specific prompt if available, otherwise return default prompt
     return prompts.get(site_type, base_prompt)
 
 
-def extract_comments_from_html(html_content: str, config: Dict[str, Any], site_type: str) -> Dict[str, Any]:
+def extract_comments_from_html(html_content: str, config: Dict[str, Any], site_type: str) -> tuple[str, dict]:
     """
     Extract comment information from HTML using SmartScraperGraph.
 
@@ -159,7 +165,7 @@ def extract_comments_from_html(html_content: str, config: Dict[str, Any], site_t
         config=config
     )
 
-    return smart_scraper_graph.run()
+    return smart_scraper_graph.run(), smart_scraper_graph.get_execution_info()
 
 
 if __name__ == "__main__":
@@ -184,7 +190,7 @@ if __name__ == "__main__":
 
         # Extract comments
         config = get_graph_config()
-        result = extract_comments_from_html(html_content, config, site)
+        result, graph_exec_info = extract_comments_from_html(html_content, config, site)
         logger.info("Successfully extracted comments from HTML")
 
         # Add the llm configuration used
@@ -193,3 +199,6 @@ if __name__ == "__main__":
 
         # Write results
         write_results_to_file(result, output_json_path)
+        
+        # Print summary of LLM usage
+        print(prettify_exec_info(graph_exec_info))
